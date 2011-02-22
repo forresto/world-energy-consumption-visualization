@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DVD2 Sketch</title>
+  
+  <link type="text/css" href="Jit/Examples/css/base.css" rel="stylesheet" />
+  <link type="text/css" href="Jit/Examples/css/Treemap.css" rel="stylesheet" />
+  
+  <!-- Loads js infoviz library -->
+  <script type="text/javascript" src="Jit/jit.js"></script>
+  
+</head>
+<body>
+
+  <!-- Gives a place for the javascript to draw the graph -->
+  <div id="infovis" style="width:1280px;height:720px;"></div>    
+
+
+<script type="text/javascript">
+
+// Defines data 
+
+var json = {  
+  "children": [  
+     {  
+       "children": [  
+       {  
+         "children": [],   
+         "data": {  
+           "artist": "", 
+           "population": 307007000,   
+           "$color": "#666",   
+           "image": "",   
+           "$area": 2339942  
+         }, 
+         "id": "usa",   
+         "name": "USA"  
+       },  
+       {  
+         "children": [],   
+         "data": {  
+           "artist": "", 
+           "population": 5338395,   
+           "$color": "#666",   
+           "image": "",   
+           "$area": 36467  
+         }, 
+         "id": "fi",   
+         "name": "Finland"  
+       },  
+       {  
+         "children": [],   
+         "data": {  
+           "artist": "", 
+           "population": 1155347678,   
+           "$color": "#666",   
+           "image": "",   
+           "$area": 594913  
+         }, 
+         "id": "in",   
+         "name": "India"  
+       },  
+         {  
+           "children": [],   
+           "data": {  
+             "artist": "", 
+             "population": 1331460000,   
+             "$color": "#666",   
+             "image": "",   
+             "$area": 1955766  
+           }, 
+           "id": "cn",   
+           "name": "China"  
+         },  
+         {  
+           "children": [],   
+           "data": {  
+             "artist": "",   
+             "population": 127560000,   
+             "$color": "#666",   
+             "image": "",   
+             "$area": 513519  
+           },   
+           "id": "jp",   
+           "name": "Japan"  
+         }  
+       ],   
+       "data": {  
+         "playcount": 8000,   
+         "$area": 8000  
+       }, 
+       "id": "countries", 
+       "name": "Countries" 
+     }  
+   ],   
+   "data": {},   
+   "id": "root",   
+   "name": "Total Energy Use by Country"  
+ };
+
+// Tells library how to draw treemap (with data)
+
+var tm = new $jit.TM.Squarified({  
+  //where to inject the visualization  
+  injectInto: 'infovis',  
+  //no parent frames  
+  titleHeight: 0,  
+  //enable animations  
+  animate: true,  
+  //no box offsets  
+  offset: 0,  
+  //add cushion gradients  
+  cushion: true,  
+  //duration of the animation  
+  duration: 1500,  
+  //Enable tips  
+  Tips: {  
+    enable: true,  
+    //add positioning offsets  
+    offsetX: 20,  
+    offsetY: 20,  
+    //implement the onShow method to  
+    //add content to the tooltip when a node  
+    //is hovered  
+    onShow: function(tip, node, isLeaf, domElement) {  
+      var html = "<div class=\"tip-title\">" + node.name   
+        + "</div><div class=\"tip-text\">";  
+      var data = node.data;  
+      if(data.$area) {  
+        html += "Total Energy Use: " + data.$area + " kilotons oil equivalent<br />";  
+      }  
+      if(data.population) {  
+        html += "Population: " + data.population + "<br />";  
+        html += "Energy Use Per Person: " + Math.round( data.$area / data.population * 1000000 ) / 100 + " tons oil equivalent per year";  
+      }  
+      if(data.image) {  
+        html += "<img src=\""+ data.image +"\" class=\"album\" />";  
+      }  
+      tip.innerHTML =  html;   
+    }    
+  },  
+  //Add the name of the node in the correponding label  
+  //This method is called once, on label creation.  
+  onCreateLabel: function(domElement, node){  
+      domElement.innerHTML = node.name;  
+      var style = domElement.style;  
+      style.display = '';  
+      style.cursor = 'default';  
+      style.border = '1px solid transparent';  
+      domElement.onmouseover = function() {  
+        style.border = '1px solid #9FD4FF';  
+      };  
+      domElement.onmouseout = function() {  
+        style.border = '1px solid transparent';  
+      };  
+  }  
+});  
+  
+tm.loadJSON(json);  
+tm.refresh();
+
+</script>
+
+</body>
+</html>
