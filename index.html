@@ -9,11 +9,16 @@
       color:white;
       background-color: black;
     }
-    circle {
+    #viz {
+      border: 1px white dotted;
+    }
+    svg circle {
       cursor: pointer;
     }
-    circle:hover {
+    svg circle:hover {
       fill: #fff;
+    }
+    svg text {
     }
   </style>
   
@@ -25,13 +30,9 @@
 
 <div id="viz"></div>
 
-
-
-
 <script type="text/javascript" src="raphael-min.js"></script>
 <script type="text/javascript" src="data.js"></script>
 <script type="text/javascript" src="world-energy.js"></script>
-
 
 <script type="text/javascript">
   var _gaq = _gaq || [];
