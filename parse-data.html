@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>data parser</title>
+</head>
+<body>
+
+<h1>World Energy Consumption</h1>
+<h2>data parser</h2>
+<p>
+  Using data from <a href="http://data.worldbank.org/developers">data.worldbank.org/developers</a> 
+  made available in Google Docs spreadsheets for 
+  <a href="https://spreadsheets.google.com/ccc?key=0AlRkwLe_yjNMdFpOa1ZvdVJ6V0k3WWFsOWVfcXNhQXc&amp;hl=en&amp;authkey=CPOdqKcG">total energy (ktoe)</a> and
+  <a href="https://spreadsheets.google.com/ccc?key=0AlRkwLe_yjNMdGE2REtvX1ZrVkFsYlo0bGVIZXh2RFE&amp;hl=en&amp;authkey=CNGdq-8P">population</a>.
+</p>
+<p>
+  View source to see how we're parsing data from the Google Docs JSON into data usable for our visualization.
+</p>
+<p>
+  <button type="button" onclick="getJSON()">Get Data</button>
+</p>
+
+<div id="output" style="font-family:monospace;padding:10px;background-color:LightGoldenRodYellow;"></div>
+
+<script type="text/javascript">
+  // with help from http://blog.jeremi.info/entry/creating-a-chart-with-raphael-js-from-a-google-spreadsheet
+  
+  /*
+   * Specify the information about our spreadsheet
+   */
+  var spreadsheet_id_energy = "0AlRkwLe_yjNMdFpOa1ZvdVJ6V0k3WWFsOWVfcXNhQXc";
+  var spreadsheet_id_population = "0AlRkwLe_yjNMdGE2REtvX1ZrVkFsYlo0bGVIZXh2RFE";
+  var worksheet_id = "od6";
+  
+  var data_energy, data_population;
+  var data_loaded = false;
+  
+  var allowed = ["Afghanistan","Albania","Algeria","American Samoa","Angola","Antigua and Barbuda","Argentina",
+    "Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas, The","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize",
+    "Benin","Bermuda","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei Darussalam","Bulgaria","Burkina Faso",
+    "Burundi","Cambodia","Cameroon","Canada","Cape Verde","Cayman Islands","Central African Republic","Chad","Channel Islands",
+    "Chile","China","Colombia","Comoros","Congo, Rep.","Costa Rica","Cote d'Ivoire","Croatia","Cuba","Cyprus","Czech Republic",
+    "Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt, Arab Rep.","El Salvador","Equatorial Guinea","Eritrea",
+    "Estonia","Ethiopia","Faeroe Islands","Fiji","Finland","France","French Polynesia","Gabon","Gambia, The","Georgia","Germany",
+    "Ghana","Gibraltar","Greece","Greenland","Grenada","Guam","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti",
+    "Honduras","Hong Kong SAR, China","Hungary","Iceland","India","Indonesia","Iran, Islamic Rep.","Iraq","Ireland","Israel","Italy",
+    "Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea, Dem. Rep.","Korea, Rep.","Kosovo","Kuwait","Kyrgyz Republic",
+    "Lao PDR","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macao SAR, China",
+    "Macedonia, FYR","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mayotte",
+    "Mexico","Micronesia, Fed. Sts.","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nepal",
+    "Netherlands","Netherlands Antilles","New Caledonia","New Zealand","Nicaragua","Niger","Nigeria","Northern Mariana Islands",
+    "Norway","Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Puerto Rico",
+    "Qatar","Russian Federation","Rwanda","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles",
+    "Sierra Leone","Singapore","Slovak Republic","Slovenia","Solomon Islands","Somalia","South Africa","Spain","Sri Lanka",
+    "St. Kitts and Nevis","St. Lucia","St. Vincent and the Grenadines","Sudan","Suriname","Swaziland","Sweden","Switzerland",
+    "Syrian Arab Republic","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
+    "Turks and Caicos Islands","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan",
+    "Vanuatu","Venezuela, RB","Vietnam","Virgin Islands (U.S.)","Yemen, Rep.","Zambia","Zimbabwe"]
+  
+  /*
+   * Creates a script tag in the page that loads in the 
+   * JSON feed for the specified spreadsheet_id/worksheet_id. 
+   * Once loaded, it calls loadGraphJSON.
+   */
+  var getJSON = function () {
+    var script_e = document.createElement('script');
+    
+    script_e.setAttribute('src', 'http://spreadsheets.google.com/feeds/list'
+                           + '/' + spreadsheet_id_energy + '/' + worksheet_id + '/public/values' +
+                          '?alt=json-in-script&callback=loadEnergyData');
+    // insert the script tag into the header
+    document.documentElement.firstChild.appendChild(script_e);
+    
+    var script_p = document.createElement('script');
+    
+    script_p.setAttribute('src', 'http://spreadsheets.google.com/feeds/list'
+                           + '/' + spreadsheet_id_population + '/' + worksheet_id + '/public/values' +
+                          '?alt=json-in-script&callback=loadPopulationData');
+    // insert the script tag into the header
+    document.documentElement.firstChild.appendChild(script_p);
+  }
+  
+  function loadEnergyData(json) {
+    data_energy = json;
+    parseData();
+  }
+  function loadPopulationData(json) {
+    data_population = json;
+    parseData();
+  }
+  function parseData() {
+    // make sure they are both loaded
+    if (!(data_energy && data_population))
+      return
+      
+    var data = {};
+    for (var i = 0; i < data_energy.feed.entry.length; i++) {
+        // Doing it like this requires that the spreadsheets be sorted the same way.
+        var energy_entry = data_energy.feed.entry[i];
+        var population_entry = data_population.feed.entry[i];
+        
+        // Must be in allowed list
+        var countryName = energy_entry["gsx$countryname"].$t
+        var index = allowed.indexOf(countryName)
+        if (index == -1) 
+          continue;
+        
+        var energy_years = [];
+        var max_energy = null;
+        for (var prop in energy_entry) {
+          if (prop.substring(0,5) == "gsx$_")
+            var thisenergy = parseInt(energy_entry[prop].$t);
+            if (thisenergy > max_energy)
+              max_energy = thisenergy
+            energy_years.push(thisenergy);
+        }
+        
+        if (max_energy == null)
+          continue;
+        
+        var population_years = []
+        for (var prop in population_entry) {
+          if (prop.substring(0,5) == "gsx$_")
+            population_years.push(parseInt(population_entry[prop].$t))
+        }
+        
+        var percapita_years = []
+        for (var j=0; j<energy_years.length; j++) {
+          var percapita = null;
+          if (energy_years[j] && population_years[j]) {
+            percapita = energy_years[j] / population_years[j] * 1000 // kilotons to tons of oil equivalent
+          }
+          percapita_years[j] = percapita
+        }
+        
+        var countryData = {}
+        countryData["energy"] = energy_years;
+        countryData["population"] = population_years;
+        countryData["percapita"] = percapita_years;
+        
+        data[countryName] = countryData
+        
+        // labels.push(pop["gsx$countryname"].$t);
+        // this is our second column
+        // We need to convert it to float because we get the data as string
+        // data.push(parseInt(entry["gsx$_cpzh4"].$t));
+    }
+
+    document.getElementById("output").innerHTML = JSON.stringify(data)
+  }
+  
+</script>
+
+</body>
+</html>

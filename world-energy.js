@@ -1,16 +1,17 @@
 (function() {
-  var animateInterval, defaultCountries, energyData, item, paper, r, view, _i, _len;
+  var animateInterval, country, defaultCountries, ktoe, paper, r, view, _i, _len;
   this.WIDTH = 1280;
   this.HEIGHT = 500;
   this.PADDING = 2;
   this.FRICTION = .995;
+  this.FRAMERATE = 60;
+  this.TOTALENERGYSCALE = .015;
+  this.PERCAPITASCALE = 400;
   Raphael.el.offset = function() {
-    var thatx, thaty, thisx, thisy;
-    thisx = this.attr("cx");
-    thisy = this.attr("cy");
-    thatx = WIDTH / 2;
-    thaty = HEIGHT / 2;
-    return Math.sqrt((thisx - thatx) * (thisx - thatx) + (thisy - thaty) * (thisy - thaty));
+    var dx, dy;
+    dx = this.attr("cx") - WIDTH / 2;
+    dy = this.attr("cy") - HEIGHT / 2;
+    return Math.sqrt(dx * dx + dy * dy);
   };
   Raphael.el.intersects = function(other) {
     var d;
@@ -18,36 +19,33 @@
     return d < this.attr("r") + other.attr("r") + PADDING;
   };
   Raphael.el.distance = function(other) {
-    var thatx, thaty, thisx, thisy;
-    thisx = this.attr("cx");
-    thisy = this.attr("cy");
-    thatx = other.attr("cx");
-    thaty = other.attr("cy");
-    return Math.sqrt((thisx - thatx) * (thisx - thatx) + (thisy - thaty) * (thisy - thaty));
+    var dx, dy;
+    dx = this.attr("cx") - other.attr("cx");
+    dy = this.attr("cy") - other.attr("cy");
+    return Math.sqrt(dx * dx + dy * dy);
   };
   paper = Raphael("viz", WIDTH, HEIGHT);
-  energyData = window.totalEnergyData;
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
   this.views = [];
   this.anchor = paper.circle(WIDTH / 2, HEIGHT / 2, 10);
-  for (_i = 0, _len = energyData.length; _i < _len; _i++) {
-    item = energyData[_i];
-    if (defaultCountries.indexOf(item["Country Name"]) !== -1) {
-      r = Math.random() * 100;
-      view = paper.set();
-      view.push(paper.circle(WIDTH / 2, HEIGHT / 2, r).attr({
-        title: item["Country Name"],
-        fill: "#fff",
-        stroke: "#000"
-      })).click(function() {
-        return this.attr("r", this.attr("r") + 1);
-      });
-      view.push(paper.text(WIDTH / 2, HEIGHT / 2 - r - 7, item["Country Name"]).attr({
-        fill: "#f00",
-        font: "bold 15px Fontin-Sans, Arial, sans-serif"
-      }));
-      views.push(view);
-    }
+  for (_i = 0, _len = defaultCountries.length; _i < _len; _i++) {
+    country = defaultCountries[_i];
+    ktoe = energyAndPopulationData[country].energy[40];
+    r = 2 * Math.sqrt(TOTALENERGYSCALE * ktoe / Math.PI);
+    view = paper.set();
+    view.push(paper.circle(WIDTH / 2, HEIGHT / 2, r).attr({
+      title: country,
+      fill: "#fff",
+      stroke: "#000"
+    })).click(function() {
+      return this.attr("r", this.attr("r") + 1);
+    });
+    view.push(paper.text(WIDTH / 2, HEIGHT / 2 - r - 7, country).attr({
+      fill: "#f00",
+      font: "bold 15px Fontin-Sans, Arial, sans-serif"
+    }));
+    view.translate(Math.random() * 100, Math.random() * 100);
+    views.push(view);
   }
   this.draw = function() {
     var view, _i, _len, _ref, _results;
@@ -117,5 +115,5 @@
     }
     return _results;
   };
-  animateInterval = setInterval("draw()", 20);
+  animateInterval = setInterval("draw()", Math.round(1000 / FRAMERATE));
 }).call(this);

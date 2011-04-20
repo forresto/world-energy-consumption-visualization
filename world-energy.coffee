@@ -3,27 +3,28 @@ this.HEIGHT = 500
 this.PADDING = 2
 this.FRICTION = .995
 
+this.FRAMERATE = 60
+
+this.TOTALENERGYSCALE = .015
+this.PERCAPITASCALE = 400
+
 Raphael.el.offset = ->
-  thisx = this.attr("cx")
-  thisy = this.attr("cy")
-  thatx = WIDTH/2
-  thaty = HEIGHT/2
-  return Math.sqrt((thisx-thatx)*(thisx-thatx) + (thisy-thaty)*(thisy-thaty))
+  dx = this.attr("cx") - WIDTH/2
+  dy = this.attr("cy") - HEIGHT/2
+  return Math.sqrt( dx*dx + dy*dy )
 
 Raphael.el.intersects = (other) ->
   d = this.distance(other)
   return (d < this.attr("r") + other.attr("r") + PADDING)
 
 Raphael.el.distance = (other) ->
-  thisx = this.attr("cx")
-  thisy = this.attr("cy")
-  thatx = other.attr("cx")
-  thaty = other.attr("cy")
-  return Math.sqrt((thisx-thatx)*(thisx-thatx) + (thisy-thaty)*(thisy-thaty))
+  dx = this.attr("cx") - other.attr("cx")
+  dy = this.attr("cy") - other.attr("cy")
+  return Math.sqrt( dx*dx + dy*dy )
 
 paper = Raphael("viz", WIDTH, HEIGHT)
 
-energyData = window.totalEnergyData
+# energyData = window.energyAndPopulationData
 
 defaultCountries = [
   "United States" 
@@ -44,24 +45,26 @@ this.views = []
 
 this.anchor = paper.circle(WIDTH/2, HEIGHT/2, 10)
 
-for item in energyData
-  if defaultCountries.indexOf(item["Country Name"]) isnt -1
-    r = Math.random()*100
-    
-    view = paper.set()
-    view.push paper.circle(WIDTH/2, HEIGHT/2, r)
-      .attr
-        title: item["Country Name"]
-        fill: "#fff"
-        stroke: "#000"
-      .click ->
-        this.attr("r", this.attr("r")+1)
-    view.push paper.text(WIDTH/2, HEIGHT/2 - r - 7, item["Country Name"])
-      .attr
-        fill: "#f00"
-        font: "bold 15px Fontin-Sans, Arial, sans-serif"
-    # view.translate(Math.random()*10, Math.random()*10)
-    views.push view
+for country in defaultCountries
+  ktoe = energyAndPopulationData[country].energy[40]
+  
+  # scaling according to area
+  r = 2 * Math.sqrt( TOTALENERGYSCALE * ktoe / Math.PI )
+  
+  view = paper.set()
+  view.push paper.circle(WIDTH/2, HEIGHT/2, r)
+    .attr
+      title: country
+      fill: "#fff"
+      stroke: "#000"
+    .click ->
+      this.attr("r", this.attr("r")+1)
+  view.push paper.text(WIDTH/2, HEIGHT/2 - r - 7, country)
+    .attr
+      fill: "#f00"
+      font: "bold 15px Fontin-Sans, Arial, sans-serif"
+  view.translate(Math.random()*100, Math.random()*100)
+  views.push view
 
 
 this.draw = ->
@@ -127,11 +130,11 @@ this.pack = (items, damping=0.1, exclude=[]) ->
     
     
 
-animateInterval = setInterval("draw()", 20)
-    
-    
-    
-    
-    
-    
-    
+animateInterval = setInterval("draw()", Math.round(1000/FRAMERATE))
+
+
+
+
+
+
+
