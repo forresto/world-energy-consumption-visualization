@@ -14,7 +14,7 @@
   this.MARGINBOTTOM = 0;
   this.MARGINLEFT = 0;
   this.BARHEIGHT = 35;
-  this.BARMARGIN = 15;
+  this.BARMARGIN = 17;
   Raphael.el.offset = function() {
     var dx, dy;
     dx = this.attr("cx") - WIDTH / 2;
@@ -36,7 +36,6 @@
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
   this.views = [];
   this.viewsPerCapita = [];
-  this.anchor = paper.circle(WIDTH / 2, HEIGHT / 2, 10);
   this.dragging = null;
   window.startDrag = function() {
     this.ox = this.attr("cx");
@@ -70,16 +69,17 @@
     view = paper.set();
     circle = paper.circle(WIDTH / 2, HEIGHT / 2, r).attr({
       title: country,
-      fill: "#fff",
+      fill: "#FFF",
       stroke: "#666"
     }).drag(doDrag, startDrag, stopDrag);
     circle.view = view;
     text = paper.text(WIDTH / 2, HEIGHT / 2 - r - 7, country).attr({
-      fill: "#f00",
+      fill: "#000",
       font: "bold 15px Fontin-Sans, Arial, sans-serif"
     });
     view.push(circle);
     view.push(text);
+    view.translate(Math.random() * WIDTH / 2 - WIDTH / 4, Math.random() * HEIGHT / 2 - HEIGHT / 4);
     view.title = country;
     view.energy = energy;
     view.population = population;
