@@ -1,19 +1,22 @@
-this.WIDTH = 1200
-this.HEIGHT = 600
+this.WIDTH = 1280
+this.HEIGHT = 650
 this.PADDING = 2
 this.FRICTION = .995
 
 this.FRAMERATE = 60
 
-this.TOTALENERGYSCALE = .00000045
-this.PERCAPITASCALE = 400
+this.TOTALENERGYSCALE = .0000004
+this.totalEnergyScaleCurrent = .00000001
+this.PERCAPITASCALE = 12000
+this.perCapitaScaleCurrent = 1
 
 this.MARGINTOP = 40
-this.MARGINRIGHT = 300
+this.MARGINRIGHT = 200
 this.MARGINBOTTOM = 0
 this.MARGINLEFT = 0
 
-
+this.BARHEIGHT = 35
+this.BARMARGIN = 15
 
 
 
@@ -62,6 +65,7 @@ defaultCountries = [
   "Finland" ]
   
 this.views = []
+this.viewsPerCapita = []
 
 this.anchor = paper.circle(WIDTH/2, HEIGHT/2, 10)
 
@@ -92,7 +96,7 @@ for country in defaultCountries
   population = energyAndPopulationData[country].population[40]
   
   # scaling according to area
-  r = 2 * Math.sqrt( TOTALENERGYSCALE * energy / Math.PI )
+  r = 2 * Math.sqrt( totalEnergyScaleCurrent * energy / Math.PI )
   
   view = paper.set()
   circle = paper.circle(WIDTH/2, HEIGHT/2, r)
@@ -108,7 +112,7 @@ for country in defaultCountries
       font: "bold 15px Fontin-Sans, Arial, sans-serif"
   view.push circle
   view.push text
-  view.translate(Math.random()*WIDTH/2-WIDTH/4, Math.random()*HEIGHT/2-HEIGHT/4)
+  # view.translate(Math.random()*WIDTH/2-WIDTH/4, Math.random()*HEIGHT/2-HEIGHT/4)
   view.title = country
   view.energy = energy
   view.population = population
@@ -116,21 +120,40 @@ for country in defaultCountries
   view.dy = 0
   views.push view
   
+  barView = paper.set()
+  barView.percapita = energy/population
+  bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + 10, barView.percapita*PERCAPITASCALE, BARHEIGHT)
+    .attr
+      title: country
+      fill: "#fff"
+      stroke: "#666"
+  barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + BARHEIGHT + 15, country)
+    .attr
+      fill: "#FFF"
+      font: "bold 10px Fontin-Sans, Arial, sans-serif"
+      "text-anchor": "start"
+  barView.push bar
+  barView.push barText
+  viewsPerCapita.push barView
+  
 this.draw = ->
   # iterations = 15
   # for i in [1..iterations]
   #   pack(views, 0.0003/i, [])
   
+  if totalEnergyScaleCurrent < TOTALENERGYSCALE
+    totalEnergyScaleCurrent += .000000005
+  
   # Scale visible items
   k_total = spaceToOccupy()
   for view in views
-    kprima = k_total * TOTALENERGYSCALE * view.energy / views.length
+    kprima = k_total * totalEnergyScaleCurrent * view.energy / views.length
     view.ka = kprima
     view.r = 2 * Math.sqrt( kprima / Math.PI )
     view[0].attr("r", view.r) # Circle
     view[1].attr("y", view[0].attr("cy") - view.r - 7) # Label
   
-  pack(views, 0.0003)
+  pack(views, .00005)
   
   
   # for ( int i=burbujas_maximas; i>=0; i-- ) {
@@ -165,8 +188,6 @@ this.pack = (items, damping=0.1) ->
         if d is 0
           view1.dx = Math.random()*2-1
           view1.dy = Math.random()*2-1
-          view2.dx = Math.random()*2-1
-          view2.dy = Math.random()*2-1
         else 
           r = view1[0].attr("r") + view2[0].attr("r") + PADDING
           if d < r - 0.01
@@ -179,28 +200,25 @@ this.pack = (items, damping=0.1) ->
             view1.dy = -vy
             view2.dx = vx
             view2.dy = vy
-            
-  for i in [0..window.views.length-1]
-    view = window.views[i]
-    # if circle1 not in exclude:
+                
     # pull to center
-    # vx = (view[0].attr("cx") - WIDTH/2) * damping
-    # vy = (view[0].attr("cy") - HEIGHT/2) * damping
-    # view.dx -= vx
-    # view.dy -= vy
+    # vx = (view1[0].attr("cx") - WIDTH/2) * damping
+    # vy = (view1[0].attr("cy") - HEIGHT/2) * damping
+    # view1.dx -= vx
+    # view1.dy -= vy
     # friction
-    view.dx = view.dx * FRICTION
-    view.dy = view.dy * FRICTION
+    view1.dx = view1.dx * FRICTION
+    view1.dy = view1.dy * FRICTION
     #bounce off edges
-    r = view[0].attr("r")
-    if view[0].attr("cx") - r <= 0
-      view.dx = -view.dx
-    if view[0].attr("cx") + r >= WIDTH
-      view.dx = -view.dx
-    if view[0].attr("cy") - r <= 15
-      view.dy = -view.dy
-    if view[0].attr("cy") + r >= HEIGHT
-      view.dy = -view.dy
+    r = view1[0].attr("r")
+    if view1[0].attr("cx") - r <= 0 + MARGINLEFT
+      view1.dx = -view1.dx
+    if view1[0].attr("cx") + r >= WIDTH - MARGINRIGHT
+      view1.dx = -view1.dx
+    if view1[0].attr("cy") - r <= 0 + MARGINTOP
+      view1.dy = -view1.dy
+    if view1[0].attr("cy") + r >= HEIGHT - MARGINBOTTOM
+      view1.dy = -view1.dy
     
     
 this.spaceToOccupy = ->

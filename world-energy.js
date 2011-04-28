@@ -1,16 +1,20 @@
 (function() {
-  var animateInterval, circle, country, defaultCountries, energy, paper, population, r, text, view, _i, _len;
-  this.WIDTH = 1200;
-  this.HEIGHT = 600;
+  var animateInterval, bar, barText, barView, circle, country, defaultCountries, energy, paper, population, r, text, view, _i, _len;
+  this.WIDTH = 1280;
+  this.HEIGHT = 650;
   this.PADDING = 2;
   this.FRICTION = .995;
   this.FRAMERATE = 60;
-  this.TOTALENERGYSCALE = .00000045;
-  this.PERCAPITASCALE = 400;
+  this.TOTALENERGYSCALE = .0000004;
+  this.totalEnergyScaleCurrent = .00000001;
+  this.PERCAPITASCALE = 12000;
+  this.perCapitaScaleCurrent = 1;
   this.MARGINTOP = 40;
-  this.MARGINRIGHT = 300;
+  this.MARGINRIGHT = 200;
   this.MARGINBOTTOM = 0;
   this.MARGINLEFT = 0;
+  this.BARHEIGHT = 35;
+  this.BARMARGIN = 15;
   Raphael.el.offset = function() {
     var dx, dy;
     dx = this.attr("cx") - WIDTH / 2;
@@ -31,6 +35,7 @@
   paper = Raphael("viz", WIDTH, HEIGHT);
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
   this.views = [];
+  this.viewsPerCapita = [];
   this.anchor = paper.circle(WIDTH / 2, HEIGHT / 2, 10);
   this.dragging = null;
   window.startDrag = function() {
@@ -61,7 +66,7 @@
     country = defaultCountries[_i];
     energy = energyAndPopulationData[country].energy[40];
     population = energyAndPopulationData[country].population[40];
-    r = 2 * Math.sqrt(TOTALENERGYSCALE * energy / Math.PI);
+    r = 2 * Math.sqrt(totalEnergyScaleCurrent * energy / Math.PI);
     view = paper.set();
     circle = paper.circle(WIDTH / 2, HEIGHT / 2, r).attr({
       title: country,
@@ -75,26 +80,43 @@
     });
     view.push(circle);
     view.push(text);
-    view.translate(Math.random() * WIDTH / 2 - WIDTH / 4, Math.random() * HEIGHT / 2 - HEIGHT / 4);
     view.title = country;
     view.energy = energy;
     view.population = population;
     view.dx = 0;
     view.dy = 0;
     views.push(view);
+    barView = paper.set();
+    barView.percapita = energy / population;
+    bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + 10, barView.percapita * PERCAPITASCALE, BARHEIGHT).attr({
+      title: country,
+      fill: "#fff",
+      stroke: "#666"
+    });
+    barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + BARHEIGHT + 15, country).attr({
+      fill: "#FFF",
+      font: "bold 10px Fontin-Sans, Arial, sans-serif",
+      "text-anchor": "start"
+    });
+    barView.push(bar);
+    barView.push(barText);
+    viewsPerCapita.push(barView);
   }
   this.draw = function() {
     var k_total, kprima, view, _i, _j, _len, _len2, _ref, _results;
+    if (totalEnergyScaleCurrent < TOTALENERGYSCALE) {
+      totalEnergyScaleCurrent += .000000005;
+    }
     k_total = spaceToOccupy();
     for (_i = 0, _len = views.length; _i < _len; _i++) {
       view = views[_i];
-      kprima = k_total * TOTALENERGYSCALE * view.energy / views.length;
+      kprima = k_total * totalEnergyScaleCurrent * view.energy / views.length;
       view.ka = kprima;
       view.r = 2 * Math.sqrt(kprima / Math.PI);
       view[0].attr("r", view.r);
       view[1].attr("y", view[0].attr("cy") - view.r - 7);
     }
-    pack(views, 0.0003);
+    pack(views, .00005);
     _ref = window.views;
     _results = [];
     for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
@@ -104,13 +126,14 @@
     return _results;
   };
   this.pack = function(items, damping) {
-    var d, dx, dy, i, j, view1, view2, vx, vy, _ref, _ref2, _ref3, _ref4, _results;
+    var d, dx, dy, i, j, view1, view2, vx, vy, _ref, _ref2, _ref3, _results;
     if (damping == null) {
       damping = 0.1;
     }
     window.views.sort(function(a, b) {
       return a[0].offset() - b[0].offset();
     });
+    _results = [];
     for (i = 0, _ref = window.views.length - 1; (0 <= _ref ? i <= _ref : i >= _ref); (0 <= _ref ? i += 1 : i -= 1)) {
       view1 = window.views[i];
       if (view1[0] === this.dragging) {
@@ -126,8 +149,6 @@
           if (d === 0) {
             view1.dx = Math.random() * 2 - 1;
             view1.dy = Math.random() * 2 - 1;
-            view2.dx = Math.random() * 2 - 1;
-            view2.dy = Math.random() * 2 - 1;
           } else {
             r = view1[0].attr("r") + view2[0].attr("r") + PADDING;
             if (d < r - 0.01) {
@@ -143,23 +164,19 @@
           }
         }
       }
-    }
-    _results = [];
-    for (i = 0, _ref4 = window.views.length - 1; (0 <= _ref4 ? i <= _ref4 : i >= _ref4); (0 <= _ref4 ? i += 1 : i -= 1)) {
-      view = window.views[i];
-      view.dx = view.dx * FRICTION;
-      view.dy = view.dy * FRICTION;
-      r = view[0].attr("r");
-      if (view[0].attr("cx") - r <= 0) {
-        view.dx = -view.dx;
+      view1.dx = view1.dx * FRICTION;
+      view1.dy = view1.dy * FRICTION;
+      r = view1[0].attr("r");
+      if (view1[0].attr("cx") - r <= 0 + MARGINLEFT) {
+        view1.dx = -view1.dx;
       }
-      if (view[0].attr("cx") + r >= WIDTH) {
-        view.dx = -view.dx;
+      if (view1[0].attr("cx") + r >= WIDTH - MARGINRIGHT) {
+        view1.dx = -view1.dx;
       }
-      if (view[0].attr("cy") - r <= 15) {
-        view.dy = -view.dy;
+      if (view1[0].attr("cy") - r <= 0 + MARGINTOP) {
+        view1.dy = -view1.dy;
       }
-      _results.push(view[0].attr("cy") + r >= HEIGHT ? view.dy = -view.dy : void 0);
+      _results.push(view1[0].attr("cy") + r >= HEIGHT - MARGINBOTTOM ? view1.dy = -view1.dy : void 0);
     }
     return _results;
   };
