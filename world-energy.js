@@ -1,5 +1,5 @@
 (function() {
-  var animateInterval, bar, barText, barView, circle, country, defaultCountries, energy, paper, population, r, text, view, _i, _len;
+  var animateInterval, bar, barText, barView, circle, country, defaultCountries, defaultCountriesLocation, energy, paper, population, r, text, view, _i, _j, _len, _len2;
   this.WIDTH = 1280;
   this.HEIGHT = 650;
   this.PADDING = 2;
@@ -34,6 +34,7 @@
   };
   paper = Raphael("viz", WIDTH, HEIGHT);
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
+  defaultCountriesLocation = [[205, 446], [945, 283], [712, 150], [726, 363], [946, 541], [530, 268], [109, 182], [412, 164], [434, 593], [281, 105], [549, 421], [542, 58]];
   this.views = [];
   this.viewsPerCapita = [];
   this.dragging = null;
@@ -73,16 +74,11 @@
       stroke: "#666"
     }).drag(doDrag, startDrag, stopDrag);
     circle.view = view;
-    text = paper.text(WIDTH / 2, HEIGHT / 2 - r - 7, country).attr({
-      fill: "#000",
-      font: "bold 15px Fontin-Sans, Arial, sans-serif"
-    });
     view.push(circle);
-    view.push(text);
-    view.translate(Math.random() * WIDTH / 2 - WIDTH / 4, Math.random() * HEIGHT / 2 - HEIGHT / 4);
     view.title = country;
     view.energy = energy;
     view.population = population;
+    view.index = views.length;
     view.dx = 0;
     view.dy = 0;
     views.push(view);
@@ -101,6 +97,15 @@
     barView.push(bar);
     barView.push(barText);
     viewsPerCapita.push(barView);
+  }
+  for (_j = 0, _len2 = views.length; _j < _len2; _j++) {
+    view = views[_j];
+    text = paper.text(WIDTH / 2, HEIGHT / 2 - r - 7, view.title).attr({
+      fill: "#000",
+      font: "bold 15px Fontin-Sans, Arial, sans-serif"
+    });
+    view.push(text);
+    view.translate(defaultCountriesLocation[view.index][0] - WIDTH / 2, defaultCountriesLocation[view.index][1] - HEIGHT / 2);
   }
   this.draw = function() {
     var k_total, kprima, view, _i, _j, _len, _len2, _ref, _results;

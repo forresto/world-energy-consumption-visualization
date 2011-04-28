@@ -63,6 +63,21 @@ defaultCountries = [
   "United Kingdom"
   "Italy"
   "Finland" ]
+
+defaultCountriesLocation = [
+  [205, 446]
+  [945, 283]
+  [712, 150]
+  [726, 363]
+  [946, 541]
+  [530, 268]
+  [109, 182]
+  [412, 164]
+  [434, 593]
+  [281, 105]
+  [549, 421]
+  [542, 58] 
+  ]
   
 this.views = []
 this.viewsPerCapita = []
@@ -106,16 +121,11 @@ for country in defaultCountries
       stroke: "#666"
     .drag(doDrag, startDrag, stopDrag)
   circle.view = view
-  text = paper.text(WIDTH/2, HEIGHT/2 - r - 7, country)
-    .attr
-      fill: "#000"
-      font: "bold 15px Fontin-Sans, Arial, sans-serif"
   view.push circle
-  view.push text
-  view.translate(Math.random()*WIDTH/2-WIDTH/4, Math.random()*HEIGHT/2-HEIGHT/4)
   view.title = country
   view.energy = energy
   view.population = population
+  view.index = views.length
   view.dx = 0
   view.dy = 0
   views.push view
@@ -135,6 +145,15 @@ for country in defaultCountries
   barView.push bar
   barView.push barText
   viewsPerCapita.push barView
+  
+for view in views
+  text = paper.text(WIDTH/2, HEIGHT/2 - r - 7, view.title)
+    .attr
+      fill: "#000"
+      font: "bold 15px Fontin-Sans, Arial, sans-serif"
+  view.push text
+  view.translate(defaultCountriesLocation[view.index][0]-WIDTH/2, defaultCountriesLocation[view.index][1]-HEIGHT/2)
+  
   
 this.draw = ->
   # iterations = 15
