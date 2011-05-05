@@ -1,15 +1,15 @@
 (function() {
-  var animateInterval, bar, barText, barView, circle, country, defaultCountries, defaultCountriesLocation, energy, paper, population, r, text, view, _i, _j, _len, _len2;
+  var animateInterval, bar, barText, barView, circle, country, defaultCountries, defaultCountriesLocation, energy, population, r, text, view, _i, _j, _len, _len2;
   this.WIDTH = 1280;
   this.HEIGHT = 650;
   this.PADDING = 2;
   this.FRICTION = .995;
   this.FRAMERATE = 60;
-  this.TOTALENERGYSCALE = .0000004;
-  this.totalEnergyScaleCurrent = .00000001;
-  this.PERCAPITASCALE = 12000;
+  this.TOTALENERGYSCALE = 0.2;
+  this.totalEnergyScaleCurrent = 0.001;
+  this.PERCAPITASCALE = 24000;
   this.perCapitaScaleCurrent = 1;
-  this.MARGINTOP = 40;
+  this.MARGINTOP = 20;
   this.MARGINRIGHT = 200;
   this.MARGINBOTTOM = 0;
   this.MARGINLEFT = 0;
@@ -32,7 +32,25 @@
     dy = this.attr("cy") - other.attr("cy");
     return Math.sqrt(dx * dx + dy * dy);
   };
-  paper = Raphael("viz", WIDTH, HEIGHT);
+  Raphael.el.bounce = function(parent) {
+    var r;
+    r = this.attr("r");
+    if (this.attr("cx") - r <= 0 + MARGINLEFT) {
+      parent.dx = 1;
+    } else if (this.attr("cx") + r >= WIDTH - MARGINRIGHT) {
+      parent.dx = -1;
+    } else {
+      parent.dx = 0;
+    }
+    if (this.attr("cy") - r <= 0 + MARGINTOP) {
+      return parent.dy = 1;
+    } else if (this.attr("cy") + r >= HEIGHT - MARGINBOTTOM) {
+      return parent.dy = -1;
+    } else {
+      return parent.dy = 0;
+    }
+  };
+  window.paper = Raphael("viz", WIDTH, HEIGHT);
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
   defaultCountriesLocation = [[205, 446], [945, 283], [712, 150], [726, 363], [946, 541], [530, 268], [109, 182], [412, 164], [434, 593], [281, 105], [549, 421], [542, 58]];
   this.views = [];
@@ -108,24 +126,25 @@
     view.translate(defaultCountriesLocation[view.index][0] - WIDTH / 2, defaultCountriesLocation[view.index][1] - HEIGHT / 2);
   }
   this.draw = function() {
-    var k_total, kprima, view, _i, _j, _len, _len2, _ref, _results;
+    var view, _i, _j, _len, _len2, _ref, _results;
     if (totalEnergyScaleCurrent < TOTALENERGYSCALE) {
-      totalEnergyScaleCurrent += .000000005;
+      totalEnergyScaleCurrent += .001;
     }
-    k_total = spaceToOccupy();
+    if (perCapitaScaleCurrent < PERCAPITASCALE) {
+      perCapitaScaleCurrent += 1;
+    }
     for (_i = 0, _len = views.length; _i < _len; _i++) {
       view = views[_i];
-      kprima = k_total * totalEnergyScaleCurrent * view.energy / views.length;
-      view.ka = kprima;
-      view.r = 2 * Math.sqrt(kprima / Math.PI);
+      view.scale = totalEnergyScaleCurrent * view.energy / views.length;
+      view.r = 2 * Math.sqrt(view.scale / Math.PI);
       view[0].attr("r", view.r);
       view[1].attr("y", view[0].attr("cy") - view.r - 7);
     }
-    pack(views, .00005);
     _ref = window.views;
     _results = [];
     for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
       view = _ref[_j];
+      view[0].bounce(view);
       _results.push(view.translate(view.dx, view.dy));
     }
     return _results;

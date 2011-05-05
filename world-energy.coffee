@@ -5,12 +5,12 @@ this.FRICTION = .995
 
 this.FRAMERATE = 60
 
-this.TOTALENERGYSCALE = .0000004
-this.totalEnergyScaleCurrent = .00000001
-this.PERCAPITASCALE = 12000
+this.TOTALENERGYSCALE = 0.2
+this.totalEnergyScaleCurrent = 0.001
+this.PERCAPITASCALE = 24000
 this.perCapitaScaleCurrent = 1
 
-this.MARGINTOP = 40
+this.MARGINTOP = 20
 this.MARGINRIGHT = 200
 this.MARGINBOTTOM = 0
 this.MARGINLEFT = 0
@@ -34,6 +34,26 @@ Raphael.el.distance = (other) ->
   dy = this.attr("cy") - other.attr("cy")
   return Math.sqrt( dx*dx + dy*dy )
 
+Raphael.el.bounce = (parent) ->
+  r = this.attr("r")
+  
+  if this.attr("cx") - r <= 0 + MARGINLEFT
+    parent.dx = 1
+  else if this.attr("cx") + r >= WIDTH - MARGINRIGHT
+    parent.dx = -1
+  else
+    parent.dx = 0
+  
+  if this.attr("cy") - r <= 0 + MARGINTOP
+    parent.dy = 1
+  else if this.attr("cy") + r >= HEIGHT - MARGINBOTTOM
+    parent.dy = -1
+  else
+    parent.dy = 0
+  
+
+
+
 # Raphael.el.startDrag = ->
 #   this.ox = this.attr("cx")
 #   this.oy = this.attr("cy")
@@ -46,7 +66,7 @@ Raphael.el.distance = (other) ->
 #   this.attr({opacity: 1});
 
 
-paper = Raphael("viz", WIDTH, HEIGHT)
+window.paper = Raphael("viz", WIDTH, HEIGHT)
 
 # energyData = window.energyAndPopulationData
 
@@ -105,7 +125,6 @@ window.stopDrag = ->
   this.attr({opacity: 1});
   window.dragging = null
 
-
 for country in defaultCountries
   energy = energyAndPopulationData[country].energy[40]
   population = energyAndPopulationData[country].population[40]
@@ -161,33 +180,22 @@ this.draw = ->
   #   pack(views, 0.0003/i, [])
   
   if totalEnergyScaleCurrent < TOTALENERGYSCALE
-    totalEnergyScaleCurrent += .000000005
+    totalEnergyScaleCurrent += .001
+
+  if perCapitaScaleCurrent < PERCAPITASCALE
+    perCapitaScaleCurrent += 1
   
   # Scale visible items
-  k_total = spaceToOccupy()
   for view in views
-    kprima = k_total * totalEnergyScaleCurrent * view.energy / views.length
-    view.ka = kprima
-    view.r = 2 * Math.sqrt( kprima / Math.PI )
+    view.scale = totalEnergyScaleCurrent * view.energy / views.length
+    view.r = 2 * Math.sqrt( view.scale / Math.PI )
     view[0].attr("r", view.r) # Circle
     view[1].attr("y", view[0].attr("cy") - view.r - 7) # Label
   
-  pack(views, .00005)
+  # pack(views, .00005)
   
-  
-  # for ( int i=burbujas_maximas; i>=0; i-- ) {
-  #   if ( i < balls.length ) {
-  #     if ( hay_gravedad ) balls[i].fall();
-  #     if ( resorte_activado ) balls[i].spring();
-  #     balls[i].bounce();
-  #     balls[i].collide();
-  #     balls[i].move();
-  #     balls[i].encima();      
-  #     balls[i].display();
-  #   }
-  # }
-    
   for view in window.views
+    view[0].bounce(view)
     view.translate(view.dx, view.dy)
     
     
