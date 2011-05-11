@@ -6,13 +6,23 @@ html, body {
 }
 
 body {
-  color:white;
+  color: white;
   background-color: #282828;
+  
+  font-family:'Open Sans', arial, sans-serif;
+}
+
+#viz {
+  position: relative;
+}
+
+h1 {
+  font-weight: 300;
+  margin-left: 10px;
 }
 
 .totalview h2 {
   text-align: center;
-  font-family:'Open Sans', arial, sans-serif;
   font-weight: 400;
   font-size: 12px;
   line-height: 16px;
@@ -24,14 +34,56 @@ body {
   border: 1px #282828 solid;
 }
 
-  .americas .circle {
-    background-color: #ECDA48;
+.americas .circle,
+.americas .bar {
+  background-color: #ECDA48;
+}
+
+  .americas .highlight {
+    background-color: #CCC;
   }
+
+
+.asia .circle,
+.asia .bar {
+  background-color: #EFA5BD;
+}
+
+  .asia .highlight {
+    background-color: #CCC;
+  }
+
+.europe .circle,
+.europe .bar {
+  background-color: #85D4DC;
+}
+
+  .europe .highlight {
+    background-color: #CCC;
+  }
+
+.ui-draggable-dragging .circle {
+  opacity: .5;
+}
   
-  .asia .circle {
-    background-color: #EFA5BD;
-  }
-  
-  .europe .circle {
-    background-color: #85D4DC;
-  }
+
+#percapita {
+  position: absolute;
+  top: 0px;
+  left: 1100px;
+}
+
+.percapitaview {
+  width: 250px;
+}
+
+.percapitaview h2 {
+  font-weight: 400;
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+}
+
+.percapitaview .bar {
+  height: 27px;
+}

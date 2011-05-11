@@ -5,8 +5,8 @@ this.FRICTION = .995
 
 this.FRAMERATE = 60
 
-this.TOTALENERGYSCALE = 0.2
-this.totalEnergyScaleCurrent = 0.001
+this.TOTALENERGYSCALE = 0.27
+this.totalEnergyScaleCurrent = 0.01
 this.PERCAPITASCALE = 24000
 this.perCapitaScaleCurrent = 1
 
@@ -15,12 +15,10 @@ this.MARGINRIGHT = 200
 this.MARGINBOTTOM = 0
 this.MARGINLEFT = 0
 
-this.BARHEIGHT = 35
-this.BARMARGIN = 19
 
 this.showingstickfigures = false
 
-defaultCountries = [
+this.defaultCountries = [
   "United States" 
   "China"
   "Russian Federation"
@@ -34,7 +32,7 @@ defaultCountries = [
   "Italy"
   "Finland" ]
 
-defaultCountriesProperties = [
+this.defaultCountriesProperties = [
   [205, 446, "americas", "US"]
   [945, 283, "asia", "CN"]
   [706, 146, "europe", "RU"]
@@ -55,6 +53,7 @@ this.views = []
 for country in defaultCountries
   view = {}
   view.title = country
+  view.abbr = defaultCountriesProperties[_i][3].toLowerCase()
   view.energy = energyAndPopulationData[country].energy[40]
   view.population = energyAndPopulationData[country].population[40]
   view.percapita = null
@@ -67,12 +66,13 @@ for country in defaultCountries
   view.totalview = $("<div />")
     .attr
       title: country
-      class: "totalview "+defaultCountriesProperties[_i][2]
+      class: "totalview "+defaultCountriesProperties[_i][2]+" "+defaultCountriesProperties[_i][3].toLowerCase()
     .css
       "position": "absolute"
       "left": defaultCountriesProperties[_i][0] - d/2 +"px"
       "top": defaultCountriesProperties[_i][1] - d/2 +"px"
-    .draggable()
+    .data
+      view: view
   view.totalview.append $("<h2>#{defaultCountriesProperties[_i][3]}</h2>")
   circle = $("<div />")
     .attr
@@ -87,16 +87,7 @@ for country in defaultCountries
   views.push view
   $("#viz").append view.totalview
   
-  # view.title = country
-  # view.energy = energy
-  # view.population = population
-  # view.percapita = percapita
-  # view.index = views.length
-  # view.dx = 0
-  # view.dy = 0
-  # views.push view
-  # 
-  # if percapita
+  # if view.percapita
   #   barView = paper.set()
   #   barView.percapita = percapita
   #   bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + 10, barView.percapita*PERCAPITASCALE, BARHEIGHT)
@@ -114,7 +105,7 @@ for country in defaultCountries
   #   viewsPerCapita.push barView
 
 this.draw = ->
-  if totalEnergyScaleCurrent < TOTALENERGYSCALE
+  if totalEnergyScaleCurrent <= TOTALENERGYSCALE
     for view in views
       d = Math.round( Math.sqrt( totalEnergyScaleCurrent * view.energy / Math.PI ) )
       view.d = d
@@ -124,22 +115,48 @@ this.draw = ->
           "top": defaultCountriesProperties[_i][1] - d/2 +"px"
         .children(".circle")
           .css
-            "width": d
-            "height": d
-            "border-radius": d/2
-    totalEnergyScaleCurrent += .001
+            "width": "#{d}px"
+            "height": "#{d}px"
+            "border-radius": "#{d/2 + 1}px"
+    totalEnergyScaleCurrent += .01
   else if !showingstickfigures
+    this.showingstickfigures = true 
     for view in views
       if view.percapita
         level = Math.round(view.percapita * PERCAPITASCALE);
         level = Math.max(level, 6)
-        level = Math.min(level, 50)
-        $(view.totalview).children(".circle")
-          .css
-            "background-image": "url(stickFigureDensityDraw/stick_#{level}.png)"
-            "background-position": "#{view.d/2}px #{view.d/2-3}px";
+        level = Math.min(level, 40)
+        $(view.totalview)
+          .draggable()
+          .children(".circle")
+            .css
+              "background-image": "url(stickFigureDensityDraw/stick_#{level}.png)"
+              "background-position": "#{view.d/2}px #{view.d/2-3}px";
+        view.barview = $('<div />')
+          .attr
+            title: view.title
+            class: "percapitaview "+this.defaultCountriesProperties[_j][2]+" "+this.defaultCountriesProperties[_j][3].toLowerCase()
+          .data
+            view: view
+          .append $('<div />')
+            .attr
+              class: "bar"
+            .css
+              width: Math.round(view.percapita * PERCAPITASCALE)+"px"
             
-    this.showingstickfigures = true 
+          .append $("<h2>#{view.title}</h2>")
+          
+        $("#percapita").append view.barview
+        
+        $(".totalview, .percapitaview")
+          .mouseenter ->
+            abbr = $(this).data("view")["abbr"]
+            $(".#{abbr}").children(".circle, .bar").addClass("highlight")
+          .mouseleave ->
+            abbr = $(this).data("view")["abbr"]
+            $(".#{abbr}").children(".circle, .bar").removeClass("highlight")
+  
+  return false
 
 
 
