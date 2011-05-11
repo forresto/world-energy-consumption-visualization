@@ -16,8 +16,9 @@ this.MARGINBOTTOM = 0
 this.MARGINLEFT = 0
 
 this.BARHEIGHT = 35
-this.BARMARGIN = 17
+this.BARMARGIN = 19
 
+this.showingstickfigures = false
 
 
 Raphael.el.offset = ->
@@ -34,22 +35,25 @@ Raphael.el.distance = (other) ->
   dy = this.attr("cy") - other.attr("cy")
   return Math.sqrt( dx*dx + dy*dy )
 
-Raphael.el.bounce = (parent) ->
+Raphael.el.bounce = ->
+  if this is window.dragging
+    return
+  
   r = this.attr("r")
   
-  if this.attr("cx") - r <= 0 + MARGINLEFT
-    parent.dx = 1
-  else if this.attr("cx") + r >= WIDTH - MARGINRIGHT
-    parent.dx = -1
+  if this.attr("cx")-r <= 0+MARGINLEFT
+    this.view.dx = 1
+  else if this.attr("cx")+r >= WIDTH-MARGINRIGHT
+    this.view.dx = -1
   else
-    parent.dx = 0
+    this.view.dx = 0
   
-  if this.attr("cy") - r <= 0 + MARGINTOP
-    parent.dy = 1
-  else if this.attr("cy") + r >= HEIGHT - MARGINBOTTOM
-    parent.dy = -1
+  if this.attr("cy")-r <= 0+MARGINTOP
+    this.view.dy = 1
+  else if this.attr("cy")+r >= HEIGHT-MARGINBOTTOM
+    this.view.dy = -1
   else
-    parent.dy = 0
+    this.view.dy = 0
   
 
 
@@ -67,6 +71,16 @@ Raphael.el.bounce = (parent) ->
 
 
 window.paper = Raphael("viz", WIDTH, HEIGHT)
+
+
+# for i in [6..100]
+#   pat = document.createElement("pattern")
+#   pat.setAttribute("id", "stick_#{i}")
+#   pat.setAttribute("patternUnits", "userSpaceOnUse")
+#   pat.setAttribute("width", i*2)
+#   pat.setAttribute("height", i*2)
+#   pat.innerHTML = "<image xlink:href='stickFigureDensityDraw/stick_#{i}.png' x='0' y='0' width='#{i*2}' height='#{i*2}' />"
+#   paper.defs.appendChild(pat)
 
 # energyData = window.energyAndPopulationData
 
@@ -87,8 +101,8 @@ defaultCountries = [
 defaultCountriesLocation = [
   [205, 446]
   [945, 283]
-  [712, 150]
-  [726, 363]
+  [706, 146]
+  [720, 378]
   [946, 541]
   [530, 268]
   [109, 182]
@@ -114,11 +128,16 @@ window.startDrag = ->
   window.dragging = this
   
 window.doDrag = (dx, dy) ->
-  # move will be called with dx and dy
+  # console.log dx, dy
+  # this.view.translate(dx, dy)
   this.attr({cx: this.ox + dx, cy: this.oy + dy})
-  this.view[1].attr
-    "x": this.attr("cx")
-    "y": this.attr("cy")-this.attr("r")-7
+  # move will be called with dx and dy
+  # this.view.dx = dx
+  # this.view.dy = dy
+  # this.attr({cx: this.ox + dx, cy: this.oy + dy})
+  # this.view.text.attr
+  #   "x": this.attr("cx")
+  #   "y": this.attr("cy")-this.attr("r")-7
   
 window.stopDrag = ->
   # restoring state
@@ -128,11 +147,14 @@ window.stopDrag = ->
 for country in defaultCountries
   energy = energyAndPopulationData[country].energy[40]
   population = energyAndPopulationData[country].population[40]
+  if energy and population
+    percapita = energy/population
   
   # scaling according to area
   r = 2 * Math.sqrt( totalEnergyScaleCurrent * energy / Math.PI )
   
   view = paper.set()
+  
   circle = paper.circle(WIDTH/2, HEIGHT/2, r)
     .attr
       title: country
@@ -141,35 +163,48 @@ for country in defaultCountries
     .drag(doDrag, startDrag, stopDrag)
   circle.view = view
   view.push circle
+  view.circle = view
+  
+  # for i in [1..(parseInt(population/5000000))]
+  #   stick = paper.path("m 0,0 v 8 l -4,4 m 4,-4 l 4,4 m -8,-8 h 8 z")
+  #     .attr
+  #       stroke: "#000"
+  #   stick.translate(WIDTH/2 + i*5, HEIGHT/2)
+  #   view.push stick
+  # view.stick = stick
+  
   view.title = country
   view.energy = energy
   view.population = population
+  view.percapita = percapita
   view.index = views.length
   view.dx = 0
   view.dy = 0
   views.push view
   
-  barView = paper.set()
-  barView.percapita = energy/population
-  bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + 10, barView.percapita*PERCAPITASCALE, BARHEIGHT)
-    .attr
-      title: country
-      fill: "#fff"
-      stroke: "#666"
-  barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + BARHEIGHT + 15, country)
-    .attr
-      fill: "#FFF"
-      font: "bold 10px Fontin-Sans, Arial, sans-serif"
-      "text-anchor": "start"
-  barView.push bar
-  barView.push barText
-  viewsPerCapita.push barView
+  if percapita
+    barView = paper.set()
+    barView.percapita = percapita
+    bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + 10, barView.percapita*PERCAPITASCALE, BARHEIGHT)
+      .attr
+        title: country
+        fill: "#fff"
+        stroke: "#666"
+    barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + BARHEIGHT + 15, country)
+      .attr
+        fill: "#FFF"
+        font: "bold 10px Fontin-Sans, Arial, sans-serif"
+        "text-anchor": "start"
+    barView.push bar
+    barView.push barText
+    viewsPerCapita.push barView
   
 for view in views
   text = paper.text(WIDTH/2, HEIGHT/2 - r - 7, view.title)
     .attr
       fill: "#000"
       font: "bold 15px Fontin-Sans, Arial, sans-serif"
+  view.text = text
   view.push text
   view.translate(defaultCountriesLocation[view.index][0]-WIDTH/2, defaultCountriesLocation[view.index][1]-HEIGHT/2)
   
@@ -181,21 +216,31 @@ this.draw = ->
   
   if totalEnergyScaleCurrent < TOTALENERGYSCALE
     totalEnergyScaleCurrent += .001
-
+    for view in views
+      view.scale = totalEnergyScaleCurrent * view.energy / views.length
+      view.r = 2 * Math.sqrt( view.scale / Math.PI )
+      view.circle.attr("r", view.r) # Circle
+      view.text.attr("y", view[0].attr("cy") - view.r - 7) # Label
+  else if !showingstickfigures
+    for view in views
+      if view.percapita
+        level = Math.round(view.percapita * PERCAPITASCALE);
+        level = Math.max(level, 6)
+        level = Math.min(level, 75)
+        console.log level
+        view.circle.attr
+          # "fill": "url(#stick_#{level})"
+          "fill": "url(stickFigureDensityDraw/stick_#{level}.png)"
+    window.showingstickfigures = true
+    
+    
   if perCapitaScaleCurrent < PERCAPITASCALE
     perCapitaScaleCurrent += 1
-  
-  # Scale visible items
-  for view in views
-    view.scale = totalEnergyScaleCurrent * view.energy / views.length
-    view.r = 2 * Math.sqrt( view.scale / Math.PI )
-    view[0].attr("r", view.r) # Circle
-    view[1].attr("y", view[0].attr("cy") - view.r - 7) # Label
   
   # pack(views, .00005)
   
   for view in window.views
-    view[0].bounce(view)
+    # view[0].bounce()
     view.translate(view.dx, view.dy)
     
     

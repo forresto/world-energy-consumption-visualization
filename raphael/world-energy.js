@@ -1,5 +1,5 @@
 (function() {
-  var animateInterval, bar, barText, barView, circle, country, defaultCountries, defaultCountriesLocation, energy, population, r, text, view, _i, _j, _len, _len2;
+  var animateInterval, bar, barText, barView, circle, country, defaultCountries, defaultCountriesLocation, energy, percapita, population, r, text, view, _i, _j, _len, _len2;
   this.WIDTH = 1280;
   this.HEIGHT = 650;
   this.PADDING = 2;
@@ -14,7 +14,8 @@
   this.MARGINBOTTOM = 0;
   this.MARGINLEFT = 0;
   this.BARHEIGHT = 35;
-  this.BARMARGIN = 17;
+  this.BARMARGIN = 19;
+  this.showingstickfigures = false;
   Raphael.el.offset = function() {
     var dx, dy;
     dx = this.attr("cx") - WIDTH / 2;
@@ -32,27 +33,30 @@
     dy = this.attr("cy") - other.attr("cy");
     return Math.sqrt(dx * dx + dy * dy);
   };
-  Raphael.el.bounce = function(parent) {
+  Raphael.el.bounce = function() {
     var r;
+    if (this === window.dragging) {
+      return;
+    }
     r = this.attr("r");
     if (this.attr("cx") - r <= 0 + MARGINLEFT) {
-      parent.dx = 1;
+      this.view.dx = 1;
     } else if (this.attr("cx") + r >= WIDTH - MARGINRIGHT) {
-      parent.dx = -1;
+      this.view.dx = -1;
     } else {
-      parent.dx = 0;
+      this.view.dx = 0;
     }
     if (this.attr("cy") - r <= 0 + MARGINTOP) {
-      return parent.dy = 1;
+      return this.view.dy = 1;
     } else if (this.attr("cy") + r >= HEIGHT - MARGINBOTTOM) {
-      return parent.dy = -1;
+      return this.view.dy = -1;
     } else {
-      return parent.dy = 0;
+      return this.view.dy = 0;
     }
   };
   window.paper = Raphael("viz", WIDTH, HEIGHT);
   defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
-  defaultCountriesLocation = [[205, 446], [945, 283], [712, 150], [726, 363], [946, 541], [530, 268], [109, 182], [412, 164], [434, 593], [281, 105], [549, 421], [542, 58]];
+  defaultCountriesLocation = [[205, 446], [945, 283], [706, 146], [720, 378], [946, 541], [530, 268], [109, 182], [412, 164], [434, 593], [281, 105], [549, 421], [542, 58]];
   this.views = [];
   this.viewsPerCapita = [];
   this.dragging = null;
@@ -65,13 +69,9 @@
     return window.dragging = this;
   };
   window.doDrag = function(dx, dy) {
-    this.attr({
+    return this.attr({
       cx: this.ox + dx,
       cy: this.oy + dy
-    });
-    return this.view[1].attr({
-      "x": this.attr("cx"),
-      "y": this.attr("cy") - this.attr("r") - 7
     });
   };
   window.stopDrag = function() {
@@ -84,6 +84,9 @@
     country = defaultCountries[_i];
     energy = energyAndPopulationData[country].energy[40];
     population = energyAndPopulationData[country].population[40];
+    if (energy && population) {
+      percapita = energy / population;
+    }
     r = 2 * Math.sqrt(totalEnergyScaleCurrent * energy / Math.PI);
     view = paper.set();
     circle = paper.circle(WIDTH / 2, HEIGHT / 2, r).attr({
@@ -93,28 +96,32 @@
     }).drag(doDrag, startDrag, stopDrag);
     circle.view = view;
     view.push(circle);
+    view.circle = view;
     view.title = country;
     view.energy = energy;
     view.population = population;
+    view.percapita = percapita;
     view.index = views.length;
     view.dx = 0;
     view.dy = 0;
     views.push(view);
-    barView = paper.set();
-    barView.percapita = energy / population;
-    bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + 10, barView.percapita * PERCAPITASCALE, BARHEIGHT).attr({
-      title: country,
-      fill: "#fff",
-      stroke: "#666"
-    });
-    barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + BARHEIGHT + 15, country).attr({
-      fill: "#FFF",
-      font: "bold 10px Fontin-Sans, Arial, sans-serif",
-      "text-anchor": "start"
-    });
-    barView.push(bar);
-    barView.push(barText);
-    viewsPerCapita.push(barView);
+    if (percapita) {
+      barView = paper.set();
+      barView.percapita = percapita;
+      bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + 10, barView.percapita * PERCAPITASCALE, BARHEIGHT).attr({
+        title: country,
+        fill: "#fff",
+        stroke: "#666"
+      });
+      barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT + BARMARGIN) + BARHEIGHT + 15, country).attr({
+        fill: "#FFF",
+        font: "bold 10px Fontin-Sans, Arial, sans-serif",
+        "text-anchor": "start"
+      });
+      barView.push(bar);
+      barView.push(barText);
+      viewsPerCapita.push(barView);
+    }
   }
   for (_j = 0, _len2 = views.length; _j < _len2; _j++) {
     view = views[_j];
@@ -122,29 +129,43 @@
       fill: "#000",
       font: "bold 15px Fontin-Sans, Arial, sans-serif"
     });
+    view.text = text;
     view.push(text);
     view.translate(defaultCountriesLocation[view.index][0] - WIDTH / 2, defaultCountriesLocation[view.index][1] - HEIGHT / 2);
   }
   this.draw = function() {
-    var view, _i, _j, _len, _len2, _ref, _results;
+    var level, view, _i, _j, _k, _len, _len2, _len3, _ref, _results;
     if (totalEnergyScaleCurrent < TOTALENERGYSCALE) {
       totalEnergyScaleCurrent += .001;
+      for (_i = 0, _len = views.length; _i < _len; _i++) {
+        view = views[_i];
+        view.scale = totalEnergyScaleCurrent * view.energy / views.length;
+        view.r = 2 * Math.sqrt(view.scale / Math.PI);
+        view.circle.attr("r", view.r);
+        view.text.attr("y", view[0].attr("cy") - view.r - 7);
+      }
+    } else if (!showingstickfigures) {
+      for (_j = 0, _len2 = views.length; _j < _len2; _j++) {
+        view = views[_j];
+        if (view.percapita) {
+          level = Math.round(view.percapita * PERCAPITASCALE);
+          level = Math.max(level, 6);
+          level = Math.min(level, 75);
+          console.log(level);
+          view.circle.attr({
+            "fill": "url(stickFigureDensityDraw/stick_" + level + ".png)"
+          });
+        }
+      }
+      window.showingstickfigures = true;
     }
     if (perCapitaScaleCurrent < PERCAPITASCALE) {
       perCapitaScaleCurrent += 1;
     }
-    for (_i = 0, _len = views.length; _i < _len; _i++) {
-      view = views[_i];
-      view.scale = totalEnergyScaleCurrent * view.energy / views.length;
-      view.r = 2 * Math.sqrt(view.scale / Math.PI);
-      view[0].attr("r", view.r);
-      view[1].attr("y", view[0].attr("cy") - view.r - 7);
-    }
     _ref = window.views;
     _results = [];
-    for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
-      view = _ref[_j];
-      view[0].bounce(view);
+    for (_k = 0, _len3 = _ref.length; _k < _len3; _k++) {
+      view = _ref[_k];
       _results.push(view.translate(view.dx, view.dy));
     }
     return _results;
