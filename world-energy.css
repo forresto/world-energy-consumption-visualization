@@ -7,30 +7,31 @@ html, body {
 
 body {
   color:white;
-  background-color: gray;
+  background-color: #282828;
 }
 
 .totalview h2 {
   text-align: center;
-  font-family: monospace;
-  font-size: 20px;
-  line-height: 20px;
+  font-family:'Open Sans', arial, sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
   margin: 0;
 }
 
 .circle {
   background-color: #FFF;
-  border: 1px #666 solid;
+  border: 1px #282828 solid;
 }
 
   .americas .circle {
-    background-color: #FEE;
+    background-color: #ECDA48;
   }
   
   .asia .circle {
-    background-color: #EFE;
+    background-color: #EFA5BD;
   }
   
   .europe .circle {
-    background-color: #EEF;
+    background-color: #85D4DC;
   }
