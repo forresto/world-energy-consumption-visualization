@@ -1,5 +1,5 @@
 (function() {
-  var animateInterval, circle, country, d, view, _i, _len;
+  var animateInterval, circle, country, d, view, _i, _j, _k, _len, _len2, _len3;
   this.WIDTH = 1280;
   this.HEIGHT = 650;
   this.PADDING = 2;
@@ -13,55 +13,69 @@
   this.MARGINRIGHT = 200;
   this.MARGINBOTTOM = 0;
   this.MARGINLEFT = 0;
+  this.DEFAULTYEAR = 2000;
   this.showingstickfigures = false;
-  this.defaultCountries = ["United States", "China", "Russian Federation", "India", "Japan", "Germany", "Canada", "France", "Brazil", "United Kingdom", "Italy", "Finland"];
-  this.defaultCountriesProperties = [[205, 446, "americas", "US"], [945, 283, "asia", "CN"], [706, 146, "europe", "RU"], [720, 378, "asia", "IN"], [946, 541, "asia", "JP"], [530, 268, "europe", "DE"], [109, 182, "americas", "CA"], [412, 164, "europe", "FR"], [434, 593, "americas", "BR"], [281, 105, "europe", "UK"], [549, 421, "europe", "IT"], [542, 58, "europe", "FI"]];
+  this.defaultCountries = ["United States", "Canada", "Finland", "Russian Federation", "Germany", "France", "United Kingdom", "Japan", "Italy", "Brazil", "China", "India"];
+  this.defaultCountriesProperties = [[205, 446, "americas", "us"], [109, 182, "americas", "ca"], [542, 58, "europe", "fi"], [706, 146, "europe", "ru"], [530, 268, "europe", "de"], [412, 164, "europe", "fr"], [261, 125, "europe", "uk"], [946, 541, "asia", "jp"], [549, 421, "europe", "it"], [434, 593, "americas", "br"], [945, 283, "asia", "cn"], [720, 378, "asia", "in"]];
   this.views = [];
   for (_i = 0, _len = defaultCountries.length; _i < _len; _i++) {
     country = defaultCountries[_i];
     view = {};
     view.title = country;
-    view.abbr = defaultCountriesProperties[_i][3].toLowerCase();
-    view.energy = energyAndPopulationData[country].energy[40];
-    view.population = energyAndPopulationData[country].population[40];
+    view.initx = defaultCountriesProperties[_i][0];
+    view.inity = defaultCountriesProperties[_i][1];
+    view.continent = defaultCountriesProperties[_i][2];
+    view.abbr = defaultCountriesProperties[_i][3];
+    view.energy = energyAndPopulationData[country].energy[DEFAULTYEAR - 1960];
+    view.population = energyAndPopulationData[country].population[DEFAULTYEAR - 1960];
     view.percapita = null;
     if (view.energy && view.population) {
       view.percapita = view.energy / view.population;
     }
-    d = Math.round(Math.sqrt(totalEnergyScaleCurrent * view.energy / Math.PI));
+    console.log(view);
+    d = 2;
     view.totalview = $("<div />").attr({
       title: country,
-      "class": "totalview " + defaultCountriesProperties[_i][2] + " " + defaultCountriesProperties[_i][3].toLowerCase()
+      "class": "totalview " + view.continent + " " + view.abbr
     }).css({
       "position": "absolute",
-      "left": defaultCountriesProperties[_i][0] - d / 2 + "px",
-      "top": defaultCountriesProperties[_i][1] - d / 2 + "px"
+      "left": view.initx - d / 2 + "px",
+      "top": view.inity - d / 2 + "px"
     }).data({
       view: view
     });
-    view.totalview.append($("<h2>" + defaultCountriesProperties[_i][3] + "</h2>"));
+    view.totalview.append($("<h2>" + view.abbr + "</h2>"));
     circle = $("<div />").attr({
       title: country,
-      "class": "circle " + defaultCountriesProperties[_i][2]
+      "class": "circle " + view.continent
     }).css({
       "width": d,
       "height": d,
       "border-radius": d / 2
     });
     view.totalview.append(circle);
+    view.percapitaview = $('<div />').attr({
+      title: view.title,
+      "class": "percapitaview " + view.continent + " " + view.abbr
+    }).data({
+      view: view
+    }).append($('<div />').attr({
+      "class": "bar"
+    })).css({
+      width: Math.round(view.percapita * PERCAPITASCALE) + "px"
+    }).append($("<h2>" + view.title + "</h2>"));
     views.push(view);
-    $("#viz").append(view.totalview);
   }
   this.draw = function() {
-    var level, view, _i, _j, _len, _len2;
+    var view, _i, _len;
     if (totalEnergyScaleCurrent <= TOTALENERGYSCALE) {
       for (_i = 0, _len = views.length; _i < _len; _i++) {
         view = views[_i];
         d = Math.round(Math.sqrt(totalEnergyScaleCurrent * view.energy / Math.PI));
         view.d = d;
         $(view.totalview).css({
-          "left": defaultCountriesProperties[_i][0] - d / 2 + "px",
-          "top": defaultCountriesProperties[_i][1] - d / 2 + "px"
+          "left": view.initx - d / 2 + "px",
+          "top": view.inity - d / 2 + "px"
         }).children(".circle").css({
           "width": "" + d + "px",
           "height": "" + d + "px",
@@ -70,41 +84,151 @@
       }
       totalEnergyScaleCurrent += .01;
     } else if (!showingstickfigures) {
-      this.showingstickfigures = true;
-      for (_j = 0, _len2 = views.length; _j < _len2; _j++) {
-        view = views[_j];
-        if (view.percapita) {
-          level = Math.round(view.percapita * PERCAPITASCALE);
-          level = Math.max(level, 6);
-          level = Math.min(level, 40);
-          $(view.totalview).draggable().children(".circle").css({
-            "background-image": "url(stickFigureDensityDraw/stick_" + level + ".png)",
-            "background-position": "" + (view.d / 2) + "px " + (view.d / 2 - 3) + "px"
-          });
-          view.barview = $('<div />').attr({
-            title: view.title,
-            "class": "percapitaview " + this.defaultCountriesProperties[_j][2] + " " + this.defaultCountriesProperties[_j][3].toLowerCase()
-          }).data({
-            view: view
-          }).append($('<div />').attr({
-            "class": "bar"
-          })).css({
-            width: Math.round(view.percapita * PERCAPITASCALE) + "px"
-          }).append($("<h2>" + view.title + "</h2>"));
-          $("#percapita").append(view.barview);
-          $(".totalview, .percapitaview").mouseenter(function() {
-            var abbr;
-            abbr = $(this).data("view")["abbr"];
-            return $("." + abbr).children(".circle, .bar").addClass("highlight");
-          }).mouseleave(function() {
-            var abbr;
-            abbr = $(this).data("view")["abbr"];
-            return $("." + abbr).children(".circle, .bar").removeClass("highlight");
-          });
+      $("#timeline .slider").slider({
+        min: 1978,
+        max: 2009,
+        value: DEFAULTYEAR,
+        slide: function(event, ui) {
+          return changeyear(ui.value);
         }
-      }
+      });
+      changeyear(DEFAULTYEAR);
+      this.showingstickfigures = true;
+      $(".totalview, .percapitaview").mouseenter(function() {
+        var abbr;
+        abbr = $(this).data("view")["abbr"];
+        $(".circle, .bar").addClass("unhighlight");
+        return $("." + abbr).children(".circle, .bar").addClass("highlight");
+      }).mouseleave(function() {
+        var abbr;
+        abbr = $(this).data("view")["abbr"];
+        $(".circle, .bar").removeClass("unhighlight");
+        return $("." + abbr).children(".circle, .bar").removeClass("highlight");
+      });
     }
     return false;
   };
+  this.changeyear = function(year) {
+    var index, level, view, _i, _len, _results;
+    $("#currentyear").text(year);
+    index = year - 1960;
+    _results = [];
+    for (_i = 0, _len = views.length; _i < _len; _i++) {
+      view = views[_i];
+      view.energy = energyAndPopulationData[view.title].energy[index];
+      view.population = energyAndPopulationData[view.title].population[index];
+      view.percapita = null;
+      if (view.energy && view.population) {
+        view.percapita = view.energy / view.population;
+      }
+      _results.push(view.percapita ? ($(view.totalview).show('fast'), $(view.percapitaview).show('fast'), view.od = view.d, view.ox = $(view.totalview).position().left + view.od / 2, view.oy = $(view.totalview).position().top + view.od / 2, d = Math.round(Math.sqrt(totalEnergyScaleCurrent * view.energy / Math.PI)), view.d = d, level = Math.round(view.percapita * 9000), level = Math.max(level, 6), level = Math.min(level, 40), $(view.totalview).attr({
+        "title": view.title + ": " + view.energy + " kilotons of oil equivalent"
+      }).css({
+        "left": view.ox - d / 2 + "px",
+        "top": view.oy - d / 2 + "px"
+      }).children(".circle").attr({
+        "title": view.title + ": " + view.energy + " kilotons of oil equivalent"
+      }).css({
+        "width": "" + d + "px",
+        "height": "" + d + "px",
+        "border-radius": "" + (d / 2 + 1) + "px",
+        "background-image": "url(stickFigureDensityDraw/stick_" + level + ".png)",
+        "background-position": "" + (view.d / 2) + "px " + (view.d / 2 - 3) + "px"
+      }), $(view.percapitaview).attr({
+        "title": view.title + ": " + Math.round(view.percapita * 100000) / 100 + " tons of oil equivalent per year"
+      }).children(".bar").attr({
+        "title": view.title + ": " + Math.round(view.percapita * 100000) / 100 + " tons of oil equivalent per year"
+      }).css({
+        width: Math.round(view.percapita * PERCAPITASCALE) + "px"
+      }), $(view.percapitaview).children("h2").text(view.title + ": " + Math.round(view.percapita * 100000) / 100)) : ($(view.totalview).hide('fast'), $(view.percapitaview).hide('fast')));
+    }
+    return _results;
+  };
+  views.sort(function(a, b) {
+    return b.energy - a.energy;
+  });
+  for (_j = 0, _len2 = views.length; _j < _len2; _j++) {
+    view = views[_j];
+    $("#viz").append(view.totalview);
+    $(view.totalview).draggable();
+  }
+  views.sort(function(a, b) {
+    return b.percapita - a.percapita;
+  });
+  for (_k = 0, _len3 = views.length; _k < _len3; _k++) {
+    view = views[_k];
+    $("#percapita").append(view.percapitaview);
+  }
+  changeyear(DEFAULTYEAR);
   animateInterval = setInterval("draw()", Math.round(1000 / FRAMERATE));
+
+
+/**
+ * Thanks http://james.padolsey.com/javascript/sorting-elements-with-jquery/
+ * jQuery.fn.sortElements
+ * --------------
+ * @param Function comparator:
+ *   Exactly the same behaviour as [1,2,3].sort(comparator)
+ *
+ * @param Function getSortable
+ *   A function that should return the element that is
+ *   to be sorted. The comparator will run on the
+ *   current collection, but you may want the actual
+ *   resulting sort to occur on a parent or another
+ *   associated element.
+ *
+ *   E.g. $('td').sortElements(comparator, function(){
+ *      return this.parentNode;
+ *   })
+ *
+ *   The <td>'s parent (<tr>) will be sorted instead
+ *   of the <td> itself.
+ */
+jQuery.fn.sortElements = (function(){
+
+    var sort = [].sort;
+
+    return function(comparator, getSortable) {
+
+        getSortable = getSortable || function(){return this;};
+
+        var placements = this.map(function(){
+
+            var sortElement = getSortable.call(this),
+                parentNode = sortElement.parentNode,
+
+                // Since the element itself will change position, we have
+                // to have some way of storing its original position in
+                // the DOM. The easiest way is to have a 'flag' node:
+                nextSibling = parentNode.insertBefore(
+                    document.createTextNode(''),
+                    sortElement.nextSibling
+                );
+
+            return function() {
+
+                if (parentNode === this) {
+                    throw new Error(
+                        "You can't sort elements if any one is a descendant of another."
+                    );
+                }
+
+                // Insert before flag:
+                parentNode.insertBefore(this, nextSibling);
+                // Remove flag:
+                parentNode.removeChild(nextSibling);
+
+            };
+
+        });
+
+        return sort.call(this, comparator).each(function(i){
+            placements[i].call(getSortable.call(this));
+        });
+
+    };
+
+})();
+
+;
 }).call(this);

@@ -15,36 +15,38 @@ this.MARGINRIGHT = 200
 this.MARGINBOTTOM = 0
 this.MARGINLEFT = 0
 
+this.DEFAULTYEAR = 2000
+
 
 this.showingstickfigures = false
 
 this.defaultCountries = [
   "United States" 
-  "China"
-  "Russian Federation"
-  "India"
-  "Japan"
-  "Germany"
   "Canada"
+  "Finland"
+  "Russian Federation"
+  "Germany"
   "France"
-  "Brazil"
   "United Kingdom"
+  "Japan"
   "Italy"
-  "Finland" ]
+  "Brazil"
+  "China"
+  "India" ]
 
 this.defaultCountriesProperties = [
-  [205, 446, "americas", "US"]
-  [945, 283, "asia", "CN"]
-  [706, 146, "europe", "RU"]
-  [720, 378, "asia", "IN"]
-  [946, 541, "asia", "JP"]
-  [530, 268, "europe", "DE"]
-  [109, 182, "americas", "CA"]
-  [412, 164, "europe", "FR"]
-  [434, 593, "americas", "BR"]
-  [281, 105, "europe", "UK"]
-  [549, 421, "europe", "IT"]
-  [542, 58, "europe", "FI"] 
+  [205, 446, "americas", "us"]
+  [109, 182, "americas", "ca"]
+  [542, 58, "europe", "fi"] 
+  [706, 146, "europe", "ru"]
+  [530, 268, "europe", "de"]
+  [412, 164, "europe", "fr"]
+  [261, 125, "europe", "uk"]
+  [946, 541, "asia", "jp"]
+  [549, 421, "europe", "it"]
+  [434, 593, "americas", "br"]
+  [945, 283, "asia", "cn"]
+  [720, 378, "asia", "in"]
   ]
   
 this.views = []
@@ -53,56 +55,57 @@ this.views = []
 for country in defaultCountries
   view = {}
   view.title = country
-  view.abbr = defaultCountriesProperties[_i][3].toLowerCase()
-  view.energy = energyAndPopulationData[country].energy[40]
-  view.population = energyAndPopulationData[country].population[40]
+  view.initx = defaultCountriesProperties[_i][0]
+  view.inity = defaultCountriesProperties[_i][1]
+  view.continent = defaultCountriesProperties[_i][2]
+  view.abbr = defaultCountriesProperties[_i][3]
+  view.energy = energyAndPopulationData[country].energy[DEFAULTYEAR-1960]
+  view.population = energyAndPopulationData[country].population[DEFAULTYEAR-1960]
   view.percapita = null
   if view.energy and view.population
     view.percapita = view.energy/view.population
+    
+  console.log view
   
   # scaling according to area
-  d = Math.round( Math.sqrt( totalEnergyScaleCurrent * view.energy / Math.PI ) )
+  d = 2
   
   view.totalview = $("<div />")
     .attr
       title: country
-      class: "totalview "+defaultCountriesProperties[_i][2]+" "+defaultCountriesProperties[_i][3].toLowerCase()
+      class: "totalview "+view.continent+" "+view.abbr
     .css
       "position": "absolute"
-      "left": defaultCountriesProperties[_i][0] - d/2 +"px"
-      "top": defaultCountriesProperties[_i][1] - d/2 +"px"
+      "left": view.initx - d/2 +"px"
+      "top": view.inity - d/2 +"px"
     .data
       view: view
-  view.totalview.append $("<h2>#{defaultCountriesProperties[_i][3]}</h2>")
+  view.totalview.append $("<h2>#{view.abbr}</h2>")
   circle = $("<div />")
     .attr
       title: country
-      class: "circle "+defaultCountriesProperties[_i][2]
+      class: "circle "+view.continent
     .css
       "width": d
       "height": d
       "border-radius": d/2
   view.totalview.append circle
   
-  views.push view
-  $("#viz").append view.totalview
-  
-  # if view.percapita
-  #   barView = paper.set()
-  #   barView.percapita = percapita
-  #   bar = paper.rect(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + 10, barView.percapita*PERCAPITASCALE, BARHEIGHT)
-  #     .attr
-  #       title: country
-  #       fill: "#fff"
-  #       stroke: "#666"
-  #   barText = paper.text(WIDTH - MARGINRIGHT, _i * (BARHEIGHT+BARMARGIN) + BARHEIGHT + 15, country)
-  #     .attr
-  #       fill: "#FFF"
-  #       font: "bold 10px Fontin-Sans, Arial, sans-serif"
-  #       "text-anchor": "start"
-  #   barView.push bar
-  #   barView.push barText
-  #   viewsPerCapita.push barView
+  view.percapitaview = $('<div />')
+    .attr
+      title: view.title
+      class: "percapitaview "+view.continent+" "+view.abbr
+    .data
+      view: view
+    .append $('<div />')
+      .attr
+        class: "bar"
+      .css
+        width: Math.round(view.percapita * PERCAPITASCALE)+"px"
+    .append $("<h2>#{view.title}</h2>")
+    
+    views.push view
+    
 
 this.draw = ->
   if totalEnergyScaleCurrent <= TOTALENERGYSCALE
@@ -111,8 +114,8 @@ this.draw = ->
       view.d = d
       $(view.totalview)
         .css
-          "left": defaultCountriesProperties[_i][0] - d/2 +"px"
-          "top": defaultCountriesProperties[_i][1] - d/2 +"px"
+          "left": view.initx - d/2 +"px"
+          "top": view.inity - d/2 +"px"
         .children(".circle")
           .css
             "width": "#{d}px"
@@ -120,45 +123,178 @@ this.draw = ->
             "border-radius": "#{d/2 + 1}px"
     totalEnergyScaleCurrent += .01
   else if !showingstickfigures
+    $("#timeline .slider")
+      .slider
+        min: 1978
+        max: 2009
+        value: DEFAULTYEAR
+        slide: (event, ui) ->
+          changeyear(ui.value)
+    changeyear(DEFAULTYEAR)
     this.showingstickfigures = true 
-    for view in views
-      if view.percapita
-        level = Math.round(view.percapita * PERCAPITASCALE);
-        level = Math.max(level, 6)
-        level = Math.min(level, 40)
-        $(view.totalview)
-          .draggable()
-          .children(".circle")
-            .css
-              "background-image": "url(stickFigureDensityDraw/stick_#{level}.png)"
-              "background-position": "#{view.d/2}px #{view.d/2-3}px";
-        view.barview = $('<div />')
-          .attr
-            title: view.title
-            class: "percapitaview "+this.defaultCountriesProperties[_j][2]+" "+this.defaultCountriesProperties[_j][3].toLowerCase()
-          .data
-            view: view
-          .append $('<div />')
-            .attr
-              class: "bar"
-            .css
-              width: Math.round(view.percapita * PERCAPITASCALE)+"px"
-            
-          .append $("<h2>#{view.title}</h2>")
-          
-        $("#percapita").append view.barview
-        
-        $(".totalview, .percapitaview")
-          .mouseenter ->
-            abbr = $(this).data("view")["abbr"]
-            $(".#{abbr}").children(".circle, .bar").addClass("highlight")
-          .mouseleave ->
-            abbr = $(this).data("view")["abbr"]
-            $(".#{abbr}").children(".circle, .bar").removeClass("highlight")
+    
+    $(".totalview, .percapitaview")
+      .mouseenter ->
+        abbr = $(this).data("view")["abbr"]
+        $(".circle, .bar").addClass("unhighlight")
+        $(".#{abbr}").children(".circle, .bar").addClass("highlight")
+      .mouseleave ->
+        abbr = $(this).data("view")["abbr"]
+        $(".circle, .bar").removeClass("unhighlight")
+        $(".#{abbr}").children(".circle, .bar").removeClass("highlight")
   
   return false
+
+this.changeyear = (year) ->
+  $("#currentyear").text(year)
+  index = year - 1960
+  for view in views
+    view.energy = energyAndPopulationData[view.title].energy[index]
+    view.population = energyAndPopulationData[view.title].population[index]
+    view.percapita = null
+    if view.energy and view.population
+      view.percapita = view.energy/view.population
+    
+    if view.percapita
+      $(view.totalview).show('fast')
+      $(view.percapitaview).show('fast')
+      
+      view.od = view.d
+      view.ox = $(view.totalview).position().left + view.od/2
+      view.oy = $(view.totalview).position().top + view.od/2
+      
+      d = Math.round( Math.sqrt( totalEnergyScaleCurrent * view.energy / Math.PI ) )
+      view.d = d
+      
+      level = Math.round(view.percapita * 9000);
+      level = Math.max(level, 6)
+      level = Math.min(level, 40)
+      
+      $(view.totalview)
+        .attr
+          "title": view.title + ": " + view.energy + " kilotons of oil equivalent"
+        .css
+          "left": view.ox - d/2 +"px"
+          "top": view.oy - d/2 +"px"
+        .children(".circle")
+          .attr
+            "title": view.title + ": " + view.energy + " kilotons of oil equivalent"
+          .css
+            "width": "#{d}px"
+            "height": "#{d}px"
+            "border-radius": "#{d/2 + 1}px"
+            "background-image": "url(stickFigureDensityDraw/stick_#{level}.png)"
+            "background-position": "#{view.d/2}px #{view.d/2-3}px"
+      $(view.percapitaview)
+        .attr
+          "title": view.title + ": " + Math.round(view.percapita*100000)/100 + " tons of oil equivalent per year"
+        .children(".bar")
+          .attr
+            "title": view.title + ": " + Math.round(view.percapita*100000)/100 + " tons of oil equivalent per year"
+          .css
+            width: Math.round(view.percapita * PERCAPITASCALE)+"px"
+      $(view.percapitaview)
+        .children("h2").text( view.title + ": " + Math.round(view.percapita*100000)/100 )
+        
+    else
+      $(view.totalview).hide('fast')
+      $(view.percapitaview).hide('fast')
+
+
+
+
+# Sort and add to page
+views.sort((a,b) -> b.energy - a.energy)
+for view in views
+  $("#viz").append view.totalview
+  $(view.totalview).draggable()
+  
+views.sort((a,b) -> b.percapita - a.percapita)
+for view in views
+  $("#percapita").append view.percapitaview
+  
+changeyear(DEFAULTYEAR)
+
 
 
 
 # Set the loop
 animateInterval = setInterval("draw()", Math.round(1000/FRAMERATE))
+
+
+
+
+
+
+
+
+`
+
+/**
+ * Thanks http://james.padolsey.com/javascript/sorting-elements-with-jquery/
+ * jQuery.fn.sortElements
+ * --------------
+ * @param Function comparator:
+ *   Exactly the same behaviour as [1,2,3].sort(comparator)
+ *   
+ * @param Function getSortable
+ *   A function that should return the element that is
+ *   to be sorted. The comparator will run on the
+ *   current collection, but you may want the actual
+ *   resulting sort to occur on a parent or another
+ *   associated element.
+ *   
+ *   E.g. $('td').sortElements(comparator, function(){
+ *      return this.parentNode; 
+ *   })
+ *   
+ *   The <td>'s parent (<tr>) will be sorted instead
+ *   of the <td> itself.
+ */
+jQuery.fn.sortElements = (function(){
+ 
+    var sort = [].sort;
+ 
+    return function(comparator, getSortable) {
+ 
+        getSortable = getSortable || function(){return this;};
+ 
+        var placements = this.map(function(){
+ 
+            var sortElement = getSortable.call(this),
+                parentNode = sortElement.parentNode,
+ 
+                // Since the element itself will change position, we have
+                // to have some way of storing its original position in
+                // the DOM. The easiest way is to have a 'flag' node:
+                nextSibling = parentNode.insertBefore(
+                    document.createTextNode(''),
+                    sortElement.nextSibling
+                );
+ 
+            return function() {
+ 
+                if (parentNode === this) {
+                    throw new Error(
+                        "You can't sort elements if any one is a descendant of another."
+                    );
+                }
+ 
+                // Insert before flag:
+                parentNode.insertBefore(this, nextSibling);
+                // Remove flag:
+                parentNode.removeChild(nextSibling);
+ 
+            };
+ 
+        });
+ 
+        return sort.call(this, comparator).each(function(i){
+            placements[i].call(getSortable.call(this));
+        });
+ 
+    };
+ 
+})();
+
+`

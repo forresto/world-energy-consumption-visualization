@@ -13,15 +13,27 @@ body {
 }
 
 #viz {
-  position: relative;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  padding-left: 20px;
 }
 
 h1 {
+  font-size: 30px;
   font-weight: 300;
-  margin-left: 10px;
+  margin: 5px 0 0 20px;
 }
 
-.totalview h2 {
+#viz h2,
+#percapita h2 {
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0;
+}
+
+#viz .totalview h2 {
+  text-transform: uppercase;
   text-align: center;
   font-weight: 400;
   font-size: 12px;
@@ -39,8 +51,11 @@ h1 {
   background-color: #ECDA48;
 }
 
+  .americas .unhighlight {
+    background-color: #ddd;
+  }
   .americas .highlight {
-    background-color: #CCC;
+    background-color: #E7B432;
   }
 
 
@@ -49,8 +64,11 @@ h1 {
   background-color: #EFA5BD;
 }
 
+  .asia .unhighlight {
+    background-color: #ddd;
+  }
   .asia .highlight {
-    background-color: #CCC;
+    background-color: #E46891;
   }
 
 .europe .circle,
@@ -58,26 +76,53 @@ h1 {
   background-color: #85D4DC;
 }
 
+  .europe .unhighlight {
+    background-color: #ddd;
+  }
   .europe .highlight {
-    background-color: #CCC;
+    background-color: #00B4BB;
   }
 
 .ui-draggable-dragging .circle {
-  opacity: .5;
+  opacity: .75;
+  z-index: 100000;
+}
+
+.ui-widget-content {
+  background: #666;
+  border: none;
+}
+
+.ui-slider-horizontal {
+  height: 2px;
+}
+
+.ui-slider-horizontal .ui-slider-handle {
+  top: -10px;
+}
+
+.ui-slider .ui-slider-handle {
+  width: 10px;
+  height: 20px;
 }
   
 
 #percapita {
   position: absolute;
-  top: 0px;
+  top: 50px;
   left: 1100px;
+}
+
+#percapita p {
+  margin: 0 0 10px 0;
+  font-size: 12px;
 }
 
 .percapitaview {
   width: 250px;
 }
 
-.percapitaview h2 {
+#percapita .percapitaview h2 {
   font-weight: 400;
   font-size: 12px;
   margin: 0 0 8px 0;
@@ -87,3 +132,29 @@ h1 {
 .percapitaview .bar {
   height: 27px;
 }
+
+#timeline {
+  position: absolute;
+  top: 690px;
+  left: 120px;
+  
+  text-align: center;
+}
+
+#timeline .slider {
+  display: inline-block;
+  width: 700px;
+  margin: 0 10px 5px 10px;
+}
+#timeline h2 {
+  margin: 0 0 5px 0;
+  font-weight: 400;
+}
+#timeline h3 {
+  display: inline-block;
+  margin: 0;
+  font-weight: 300;
+  color: #AAA;
+}
+
+

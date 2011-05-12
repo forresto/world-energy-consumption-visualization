@@ -7,16 +7,27 @@
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js"></script>
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.12/jquery-ui.min.js"></script>
   
+  <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/smoothness/jquery-ui.css" media="all" />
   <link href='http://fonts.googleapis.com/css?family=Open+Sans:light,regular,bold' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="world-energy.css" media="all" />
+  
   
 </head>
 <body>
 
-  <h1>World Energy Consumption</h1>
+  <h1>Energy Consumption (Top 12 GDP countries + Finland)</h1>
   <div id="viz">
-    <div id="percapita">
-    </div>
+    <h2>Total</h2>
+  </div>
+  <div id="percapita">
+    <h2>Per-Capita</h2>
+    <p>(tons of oil equivalent per year)</p>
+  </div>
+  <div id="timeline">
+    <h2 id="currentyear">1978</h2>
+    <h3>1978</h3>
+    <div class="slider"></div>
+    <h3>2009</h3>
   </div>
   
   <script type="text/javascript" src="data.js"></script>
