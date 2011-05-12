@@ -52,10 +52,12 @@ h1 {
 }
 
   .americas .unhighlight {
-    background-color: #ddd;
+/*    background-color: #ddd;*/
+    opacity: .25;
   }
   .americas .highlight {
     background-color: #E7B432;
+    opacity: 1;
   }
 
 
@@ -65,10 +67,12 @@ h1 {
 }
 
   .asia .unhighlight {
-    background-color: #ddd;
+/*    background-color: #ddd;*/
+    opacity: .25;
   }
   .asia .highlight {
     background-color: #E46891;
+    opacity: 1;
   }
 
 .europe .circle,
@@ -77,10 +81,12 @@ h1 {
 }
 
   .europe .unhighlight {
-    background-color: #ddd;
+/*    background-color: #ddd;*/
+    opacity: .25;
   }
   .europe .highlight {
     background-color: #00B4BB;
+    opacity: 1;
   }
 
 .ui-draggable-dragging .circle {

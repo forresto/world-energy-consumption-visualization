@@ -47,7 +47,7 @@
     view.totalview.append($("<h2>" + view.abbr + "</h2>"));
     circle = $("<div />").attr({
       title: country,
-      "class": "circle " + view.continent
+      "class": "circle " + view.continent + " " + view.abbr
     }).css({
       "width": d,
       "height": d,
@@ -60,7 +60,7 @@
     }).data({
       view: view
     }).append($('<div />').attr({
-      "class": "bar"
+      "class": "bar " + view.abbr
     })).css({
       width: Math.round(view.percapita * PERCAPITASCALE) + "px"
     }).append($("<h2>" + view.title + "</h2>"));
@@ -97,13 +97,18 @@
       $(".totalview, .percapitaview").mouseenter(function() {
         var abbr;
         abbr = $(this).data("view")["abbr"];
-        $(".circle, .bar").addClass("unhighlight");
-        return $("." + abbr).children(".circle, .bar").addClass("highlight");
+        $(".circle, .bar").parent().stop().not("." + abbr).animate({
+          opacity: .3
+        });
+        return $(".circle." + abbr + ", .bar." + abbr).parent().stop().animate({
+          opacity: 1
+        });
       }).mouseleave(function() {
         var abbr;
         abbr = $(this).data("view")["abbr"];
-        $(".circle, .bar").removeClass("unhighlight");
-        return $("." + abbr).children(".circle, .bar").removeClass("highlight");
+        return $(".circle, .bar").parent().stop().animate({
+          opacity: 1
+        });
       });
     }
     return false;

@@ -84,7 +84,7 @@ for country in defaultCountries
   circle = $("<div />")
     .attr
       title: country
-      class: "circle "+view.continent
+      class: "circle "+view.continent+" "+view.abbr
     .css
       "width": d
       "height": d
@@ -99,7 +99,7 @@ for country in defaultCountries
       view: view
     .append $('<div />')
       .attr
-        class: "bar"
+        class: "bar "+view.abbr
       .css
         width: Math.round(view.percapita * PERCAPITASCALE)+"px"
     .append $("<h2>#{view.title}</h2>")
@@ -136,12 +136,22 @@ this.draw = ->
     $(".totalview, .percapitaview")
       .mouseenter ->
         abbr = $(this).data("view")["abbr"]
-        $(".circle, .bar").addClass("unhighlight")
-        $(".#{abbr}").children(".circle, .bar").addClass("highlight")
+        # $(".circle, .bar").addClass("unhighlight")
+        $(".circle, .bar").parent().stop()
+          .not(".#{abbr}")
+            .animate
+              opacity: .3
+        $(".circle.#{abbr}, .bar.#{abbr}").parent().stop()
+          .animate
+            opacity: 1
+        # $(".#{abbr}").children(".circle, .bar").addClass("highlight")
       .mouseleave ->
         abbr = $(this).data("view")["abbr"]
-        $(".circle, .bar").removeClass("unhighlight")
-        $(".#{abbr}").children(".circle, .bar").removeClass("highlight")
+        # $(".circle, .bar").removeClass("unhighlight")
+        $(".circle, .bar").parent().stop()
+          .animate
+            opacity: 1
+        # $(".#{abbr}").children(".circle, .bar").removeClass("highlight")
   
   return false
 
