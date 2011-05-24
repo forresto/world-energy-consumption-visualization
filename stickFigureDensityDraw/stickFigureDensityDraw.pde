@@ -23,15 +23,15 @@ void draw (){
     int x = 0;
     int add_x = y%2 == 0 ? 0 : density/2;
     while (x < (width+density)/density) {
-      Stick stick = new Stick(x*density+add_x, y*density);
+      Stick stick = new Stick(x*density+add_x, y*density, density);
       stick.draw();
       x++;
     }
     y++;
   }
   
-  if (density >= 6) {
-    //saveTile();
+  if (density >= 2) {
+    saveTile();
     density--;
   }
   
