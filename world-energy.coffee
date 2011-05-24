@@ -177,8 +177,8 @@ this.changeyear = (year) ->
       view.d = d
       
       level = Math.round(view.percapita * 9000);
-      level = Math.max(level, 6)
-      level = Math.min(level, 40)
+      level = Math.max(level, 2)
+      level = Math.min(level, 100)
       
       $(view.totalview)
         .attr
