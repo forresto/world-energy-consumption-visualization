@@ -32,6 +32,11 @@ h1 {
   margin: 0;
 }
 
+#viz p {
+  font-size: 12px;
+  line-height: 12px;
+}
+
 #viz .totalview h2 {
   text-transform: uppercase;
   text-align: center;
@@ -48,7 +53,7 @@ h1 {
 
 .americas .circle,
 .americas .bar {
-  background-color: #ECDA48;
+  background-color: #EFDA71;
 }
 
   .americas .unhighlight {
@@ -63,7 +68,7 @@ h1 {
 
 .asia .circle,
 .asia .bar {
-  background-color: #EFA5BD;
+  background-color: #8CC7E1;
 }
 
   .asia .unhighlight {
@@ -77,7 +82,7 @@ h1 {
 
 .europe .circle,
 .europe .bar {
-  background-color: #85D4DC;
+  background-color: #A3734C;
 }
 
   .europe .unhighlight {
@@ -126,6 +131,7 @@ h1 {
 
 .percapitaview {
   width: 250px;
+  white-space: nowrap;
 }
 
 #percapita .percapitaview h2 {
@@ -137,6 +143,9 @@ h1 {
 
 .percapitaview .bar {
   height: 27px;
+  display: inline-block;
+  background-image: url(stickFigureDensityDraw/stick.png);
+  background-repeat: no-repeat;
 }
 
 #timeline {

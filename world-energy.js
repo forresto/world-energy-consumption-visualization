@@ -32,7 +32,6 @@
     if (view.energy && view.population) {
       view.percapita = view.energy / view.population;
     }
-    console.log(view);
     d = 2;
     view.totalview = $("<div />").attr({
       title: country,
@@ -63,7 +62,8 @@
       "class": "bar " + view.abbr
     })).css({
       width: Math.round(view.percapita * PERCAPITASCALE) + "px"
-    }).append($("<h2>" + view.title + "</h2>"));
+    });
+    view.percapitaview.append($("<h2>" + view.title + "</h2>"));
     views.push(view);
   }
   this.draw = function() {
@@ -126,7 +126,7 @@
       if (view.energy && view.population) {
         view.percapita = view.energy / view.population;
       }
-      _results.push(view.percapita ? ($(view.totalview).show('fast'), $(view.percapitaview).show('fast'), view.od = view.d, view.ox = $(view.totalview).position().left + view.od / 2, view.oy = $(view.totalview).position().top + view.od / 2, d = Math.round(Math.sqrt(totalEnergyScaleCurrent * view.energy / Math.PI)), view.d = d, level = Math.round(view.percapita * 9000), level = Math.max(level, 2), level = Math.min(level, 100), $(view.totalview).attr({
+      _results.push(view.percapita ? ($(view.totalview).show('fast'), $(view.percapitaview).show('fast'), view.od = view.d, view.ox = $(view.totalview).position().left + view.od / 2, view.oy = $(view.totalview).position().top + view.od / 2, d = Math.round(Math.sqrt(totalEnergyScaleCurrent * view.energy / Math.PI)), view.d = d, level = Math.round(view.percapita * 9000), level = Math.max(level, 4), level = Math.min(level, 120), $(view.totalview).attr({
         "title": view.title + ": " + view.energy + " kilotons of oil equivalent"
       }).css({
         "left": view.ox - d / 2 + "px",

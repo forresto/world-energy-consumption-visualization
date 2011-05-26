@@ -65,7 +65,7 @@ for country in defaultCountries
   if view.energy and view.population
     view.percapita = view.energy/view.population
     
-  console.log view
+  # console.log view
   
   # scaling according to area
   d = 2
@@ -102,6 +102,9 @@ for country in defaultCountries
         class: "bar "+view.abbr
       .css
         width: Math.round(view.percapita * PERCAPITASCALE)+"px"
+    # .append $("<img src='stickFigureDensityDraw/stick.png' />")
+    
+  view.percapitaview
     .append $("<h2>#{view.title}</h2>")
     
     views.push view
@@ -177,8 +180,8 @@ this.changeyear = (year) ->
       view.d = d
       
       level = Math.round(view.percapita * 9000);
-      level = Math.max(level, 2)
-      level = Math.min(level, 100)
+      level = Math.max(level, 4)
+      level = Math.min(level, 120)
       
       $(view.totalview)
         .attr
